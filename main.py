@@ -147,22 +147,41 @@ class DentistView(tk.Toplevel):
         self.background_label.pack()
 
         # OPtionen (Button)
-        self.optionFrame1 = tk.Frame(self, width=170, height=256, bg="#3B6064", highlightbackground="#5B949A", highlightthickness=0.5)
-        # self.optionFrame1.place(x=1126, y=278)
+        self.optionFrame1 = tk.Frame(self, width=351, height=256, bg="#3B6064", highlightbackground="#5B949A", highlightthickness=0.5)
+        self.optionFrame1.place(x=765, y=278)
+        #----------------------------
+        self.logout_button = tk.Button(self.optionFrame1, text="Krankenkasse\nändern", width=18, height=2, font=("Arial", 9, "bold"))
+        self.logout_button.place(x=18, y=25)
+        self.logout_button = tk.Button(self.optionFrame1, text="Behandlungszeit\nändern", width=18, height=2, font=("Arial", 9, "bold"))
+        self.logout_button.place(x=197, y=25)
+        self.logout_button = tk.Button(self.optionFrame1, text="Einstellung", width=18, height=2, font=("Arial", 9, "bold"))
+        self.logout_button.place(x=18, y=83.5)
+        self.logout_button = tk.Button(self.optionFrame1, text="Einstellung", width=18, height=2, font=("Arial", 9, "bold"))
+        self.logout_button.place(x=197, y=83.5)
+        self.logout_button = tk.Button(self.optionFrame1, text="Einstellung", width=18, height=2, font=("Arial", 9, "bold"))
+        self.logout_button.place(x=18, y=140)
+        self.logout_button = tk.Button(self.optionFrame1, text="Einstellung", width=18, height=2, font=("Arial", 9, "bold"))
+        self.logout_button.place(x=18, y=140)
+        self.logout_button = tk.Button(self.optionFrame1, text="Einstellung", width=18, height=2, font=("Arial", 9, "bold"))
+        self.logout_button.place(x=197, y=140)
+        self.logout_button = tk.Button(self.optionFrame1, text="Einstellung", width=18, height=2, font=("Arial", 9, "bold"))
+        self.logout_button.place(x=18, y=200)
+        self.logout_button = tk.Button(self.optionFrame1, text="Einstellung", width=18, height=2, font=("Arial", 9, "bold"))
+        self.logout_button.place(x=197, y=200)
+        #----------------------------
         #----------------------------
         self.optionFrame2 = tk.Frame(self, width=170, height=256, bg="#3B6064", highlightbackground="#5B949A", highlightthickness=0.5)
         self.optionFrame2.place(x=1126, y=278)
         #----------------------------
-        self.logout_button = tk.Button(self.optionFrame2, text="Passwort ändern", command=self.logout, width=18, height=2, font=("Arial", 9, "bold"))
-        # logout_button.grid(row = 0, column = 0)
+        self.logout_button = tk.Button(self.optionFrame2, text="Passwort ändern", width=18, height=2, font=("Arial", 9, "bold"))
         self.logout_button.place(x=18, y=25)
-        # #----------------------------
-        self.logout_button = tk.Button(self.optionFrame2, text="Hintergrung", command=self.logout, width=18, height=2, font=("Arial", 9, "bold"))
-        self.logout_button.place(x=18, y=83.2)
-        # #----------------------------
-        self.logout_button = tk.Button(self.optionFrame2, text="Englisch/Deutsch", command=self.logout, width=18, height=2, font=("Arial", 9, "bold"))
-        self.logout_button.place(x=18, y=140)
-        # #----------------------------
+        #----------------------------
+        self.Hintergrung_button = tk.Button(self.optionFrame2, text="Hintergrung", width=18, height=2, font=("Arial", 9, "bold"))
+        self.Hintergrung_button.place(x=18, y=83.2)
+        #----------------------------
+        self.Sprache_button = tk.Button(self.optionFrame2, text="Englisch/Deutsch", width=18, height=2, font=("Arial", 9, "bold"))
+        self.Sprache_button.place(x=18, y=140)
+        #----------------------------
         self.logout_button = tk.Button(self.optionFrame2, text="Auslogen", command=self.logout, width=16, height=2, background="#E36370", fg="white", font=("Arial", 10, "bold"))
         self.logout_button.place(x=18, y=200)
 
