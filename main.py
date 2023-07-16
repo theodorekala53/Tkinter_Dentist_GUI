@@ -11,6 +11,11 @@ from tkinter import ttk
 from datetime import datetime
 from tkinter import messagebox
 from PIL import ImageTk, Image, Image
+from tkinter import Label, PhotoImage
+
+#database für Ärzte (beim Login)
+db = pd.read_excel("Database/Patienten_Zahnärzte_Kosten.xlsx", sheet_name="Zahnärzte", header=None)
+db2 = pd.read_excel("Database/Patienten_Zahnärzte_Kosten.xlsx", sheet_name="Stamm-Patienten", header=None)
 
 
 class LoginWindow(tk.Tk):
@@ -52,21 +57,28 @@ class LoginWindow(tk.Tk):
         password = None
 
         # Ärzten Database
-        db = pd.read_excel("Database/Patienten_Zahnärzte_Kosten.xlsx", sheet_name="Zahnärzte", header=None)
         full_names = db.iloc[3:80, 1].values.tolist()
         last_names = [name.split()[-1] for name in full_names]
         passwords = db.iloc[3:80, 2].values.tolist()
 
+        #Patienten
+        full_names2 = db2.iloc[4:61, 2].values.tolist()
+        patient_names = [name.split()[-1] for name in full_names2]
+        patient_passwords = db2.iloc[4:61, 3].values.tolist()
+
         global username
+        global KrankenkasseArt
         username = self.username_entry.get()
         password = self.password_entry.get()
 
         if username in last_names and password in passwords:
-            index1 = last_names.index(username)
-            role1 = db.iloc[3+index1, 3]
             self.open_dentist_view(username)
         elif username == "a" and password == "a":
             self.open_dentist_view(username)
+        elif username == "p" and password == "p":
+            self.open_Patient_View(username)
+        elif username in patient_names and password in patient_passwords:
+            self.open_Patient_View(username) 
         # elif username in last_names2 and password in passwords2:
         #     index2 = last_names2.index(username)  # Obtenir l'index correspondant au nom d'utilisateur    # <----------------
         #     role2 = role = db2.iloc[3+index2, 3]                                      # <----------------
@@ -78,9 +90,76 @@ class LoginWindow(tk.Tk):
     def open_dentist_view(self, last_names):
         self.withdraw()
         # self.iconify()
-
         dentist_view = DentistView(self, last_names)
         dentist_view.mainloop()
+
+    def open_Patient_View(self, patient_names):
+        self.withdraw()
+        dentist_View = PatientView(self, patient_names)
+        dentist_View.mainloop()
+
+class PatientView(tk.Toplevel):
+    def __init__(self, master, patient_names):
+        super().__init__(master)
+        self.geometry("1300x580")
+        self.minsize(1300, 580)
+        self.maxsize(1300, 580)
+        self.title("Patientenansicht")
+        self.config(background="#3B6064")
+        # self.last_names2 = last_names
+
+
+        # Hauptframe für das Layout der Patientenansicht
+        self.main_frame = tk.Frame(self, width=240, height=580)
+        self.main_frame.pack(side="left")
+
+        # Linker Frame für die Navigation oder zusätzliche Informationen
+        self.left_frame = tk.Frame(self.main_frame, width=240, height=580, bg="#5B949A")
+        self.left_frame.pack(side="left")
+        self.left_frame.pack_propagate(False)
+
+        self.info_Frame = tk.LabelFrame(self.main_frame, width=238, height=305, background="white", text="")
+        self.info_Frame.place(rely=0.003, relx=0.005)
+        
+        self.info_frame_unterbox = tk.Frame(self.info_Frame, width=230, height=150, background="white")
+        self.info_frame_unterbox.place(rely=0.66, relx=0)
+
+        #Profil Bild
+        self.image_frame = tk.Frame(self.info_Frame, width=180, height=180)
+        self.image_frame.place(rely=0.04, relx=0.11)
+        img = PhotoImage(file = "Bilder/user.png")
+        lbl = Label(self.image_frame, image=img, anchor="center")
+        lbl.place(rely=0, relx=0)
+
+        # Info Frame
+        self.Name_Label = tk.Label(self.info_frame_unterbox ,text="Titel: ", font=("Arial", 11, "bold"), background="white")
+        self.Name_Label.place(rely=0.08, relx=0.11)
+
+        self.Name_Label = tk.Label(self.info_frame_unterbox ,text="Name: " + patient_names, font=("Arial", 11, "bold"), background="white")
+        self.Name_Label.place(rely=0.25, relx=0.11)
+
+        self.Krankenkass_Label = tk.Label(self.info_frame_unterbox ,text="Krankenkasse: ", font=("Arial", 11, "bold"), background="white")
+        self.Krankenkass_Label.place(rely=0.45, relx=0.11)
+
+        #Button
+        
+
+        self.bg_button = tk.Button(self.left_frame, text="Background Ändern", width=25, bg="#2A324B", fg="white", font=("Arial", 9, "bold"))
+        self.bg_button.pack(side="bottom", pady=13)
+
+        self.Auslogen_button = tk.Button(self.left_frame, text="Auslogen",command=self.logout, width=25, bg="#DE5466", fg="white", font=("Arial", 9, "bold"))
+        self.Auslogen_button.pack(side="bottom", pady=7)
+
+        self.einstellung_button = tk.Button(self.left_frame, text="Passwort Ändern", width=25, bg="#2A324B", fg="white", font=("Arial", 9, "bold")) # TODO: , command=open_change_password_window
+        self.einstellung_button.pack(side="bottom", pady=10)
+       
+
+
+    def logout(self):
+        self.destroy()
+        self.master.deiconify()
+        self.master.username_entry.delete(0, tk.END)
+        self.master.password_entry.delete(0, tk.END)
 
 
 class DentistView(tk.Toplevel):
