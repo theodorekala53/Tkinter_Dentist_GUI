@@ -12,6 +12,7 @@ from datetime import datetime
 from tkinter import messagebox
 from PIL import ImageTk, Image, Image
 from tkinter import Label, PhotoImage
+from tkinter.ttk import Combobox
 
 #database für Ärzte (beim Login)
 db = pd.read_excel("Database/Patienten_Zahnärzte_Kosten.xlsx", sheet_name="Zahnärzte", header=None)
@@ -102,8 +103,8 @@ class PatientView(tk.Toplevel):
     def __init__(self, master, patient_names):
         super().__init__(master)
         self.geometry("1300x580")
-        self.minsize(1300, 580)
-        self.maxsize(1300, 580)
+        # self.minsize(1300, 580)
+        # self.maxsize(1300, 580)
         self.title("Patientenansicht")
         self.config(background="#3B6064")
         # self.last_names2 = last_names
@@ -142,8 +143,6 @@ class PatientView(tk.Toplevel):
         self.Krankenkass_Label.place(rely=0.45, relx=0.11)
 
         #Button
-        
-
         self.bg_button = tk.Button(self.left_frame, text="Background Ändern", width=25, bg="#2A324B", fg="white", font=("Arial", 9, "bold"))
         self.bg_button.pack(side="bottom", pady=13)
 
@@ -153,7 +152,304 @@ class PatientView(tk.Toplevel):
         self.einstellung_button = tk.Button(self.left_frame, text="Passwort Ändern", width=25, bg="#2A324B", fg="white", font=("Arial", 9, "bold")) # TODO: , command=open_change_password_window
         self.einstellung_button.pack(side="bottom", pady=10)
        
+        self.untersten_Frame = tk.Frame(self, width=1058, height=30, background="#5B949A")
+        self.untersten_Frame.pack(side="bottom", fill="y")
 
+        self.firma_name_label = tk.Label(self.untersten_Frame, text="Zahnärzte am Park GmbH", background="#5B949A", fg="white", font=("Arial", 11, "bold"))
+        # firma_name_label.pack(side="left", fill="x")
+        self.firma_name_label.place(x=15, y=5)
+        self.animate_label()  # Animation starten
+
+        self.current_time_label = tk.Label(self.untersten_Frame, text="", font=("Arial", 11, "bold"), fg="white", bg="#5B949A")
+        self.current_time_label.place(x=350, y=5)
+
+        self.NameLabel = tk.Label(self.untersten_Frame, text= username, font=("Arial", 11, "bold"), background="#5B949A", fg="white")
+        self.NameLabel.place(x=490, y=5)
+
+
+        #--------Auswahl Frame oben---------
+        auswahl_Frame1 = tk.LabelFrame(self, text="", width=1055, height=304, background="white")
+        auswahl_Frame1.place(rely=0.003, relx=0.186)
+
+
+        # Variables
+        self.teeth_var = tk.StringVar()
+        self.fill_material_var = tk.StringVar()
+        self.cost_var = tk.StringVar()
+        self.dentist_var = tk.StringVar()
+        self.problematik_var = tk.StringVar()
+
+        # Create labels and entries for teeth and filling selection
+        self.DentaleProblem = tk.Label(auswahl_Frame1, text="Problematik:", background="white", font=("Arial", 10, "bold"))
+        self.DentaleProblem.place(rely=0.05, relx=0.01)
+
+        Problem_options = ["Karies klein", "Karies groß", "Teilkrone", "krone", "Wurzelbehandlung"]        
+        self.combobox1 = Combobox(auswahl_Frame1, textvariable=self.problematik_var, values=Problem_options)
+        self.problematik_var.set(Problem_options[0])  # Set the default selection
+        self.combobox1.place(rely=0.05, relx=0.15) 
+
+        self.teeth_label = tk.Label(auswahl_Frame1, text="Zahnanzahl:", background="white", font=("Arial", 10, "bold"))
+        self.teeth_label.place(rely=0.243, relx=0.01)
+        self.teeth_entry = tk.Entry(auswahl_Frame1, background="#f1f1f1",width=23 ,textvariable=self.teeth_var)
+        self.teeth_entry.place(rely=0.243, relx=0.15)
+
+        self.filling_label = tk.Label(auswahl_Frame1, text="Füllmaterial:", background="white", font=("Arial", 10, "bold"))
+        self.filling_label.place(rely=0.45, relx=0.01)
+        filling_options = ["normal", "höherwertig", "höchstwertig"]
+        self.combobox1 = Combobox(auswahl_Frame1, textvariable=self.fill_material_var, values=filling_options)
+        self.fill_material_var.set(filling_options[0])  # Set the default selection
+        self.combobox1.place(rely=0.45, relx=0.15)
+
+        self.behandlung_Zeit_Label = tk.Label(auswahl_Frame1,text="Behandlungszeit", background="white", font=("Arial", 10, "bold"))
+        self.behandlung_Zeit_Label.place(rely=0.65, relx=0.01)
+        self.anzeige_Zeit_Label = tk.Label(auswahl_Frame1,text="", height=2, width=10, background="#B2CFD2", font=("Arial", 10, "bold"))
+        self.anzeige_Zeit_Label.place(rely=0.62, relx=0.15)
+
+        self.Krankenk_label = tk.Label(auswahl_Frame1, text="Krankenkassenart:", background="white", font=("Arial", 10, "bold"))
+        self.Krankenk_label.place(rely=0.05, relx=0.36)
+        # Krankenkassenart ComboBox
+        krankenkassenarten = ["------ Auswählen ------","gesetzlich", "freiwillig gesetzlich", "privat"]
+        self.krankenk_var = tk.StringVar(self)
+        self.combobox2 = Combobox(auswahl_Frame1, values=krankenkassenarten, textvariable=self.krankenk_var, width=24)
+        self.combobox2.bind("<<ComboboxSelected>>", self.update_dentist_options)  # Bind the selection event
+        self.combobox2.current(0)  # Set the default selection
+        self.combobox2.place(rely=0.05, relx=0.56)
+
+        # Dentist Selection Label
+        self.dentist_label = tk.Label(self, text="Behandelter Zahnarzt:", background="white", font=("Arial", 10, "bold"))
+        self.dentist_label.place(rely=0.1, relx=0.478)
+        # Dentist ComboBox
+        self.dentist_var = tk.StringVar(self)
+        self.dentist_combobox = Combobox(self, textvariable=self.dentist_var, state="readonly", width=24)
+        self.dentist_combobox.place(rely=0.1, relx=0.639)
+        self.dentist_combobox.bind("<<ComboboxSelected>>", self.updateDescription)
+
+        self.cost_label = tk.Label(auswahl_Frame1, text="Behandlungskosten: $0.00", pady=20, background="#B2CFD2", height=3, padx=60, justify="center", font=("Arial", 10, "bold"))
+        self.cost_label.place(rely=0.446, relx=0.4)
+
+        self.buttonBerechnen = tk.Button(auswahl_Frame1, text="Kosten Berechnen",background="#3B6064", fg="white", command=self.calculate_cost, font=("Arial", 10, "bold"), padx=25, pady=10)
+        self.buttonBerechnen.place(rely=0.8, relx=0.4516)
+
+        self.terminDescr = tk.Frame(auswahl_Frame1, background="white", width=266, height=280)
+        self.terminDescr.place(rely=0.03, relx=0.74)
+
+        self.description = tk.Label(self.terminDescr, text="keine Beschreibung", width=36, height=10, background="white")
+        self.description.place(rely=0.24, relx=0.01)
+
+        # Termin kalender 
+        #--------Auswahl Frame unter---------
+        auswahl_Frame2 = tk.LabelFrame(self, text="", width=480.5, height=237, background="white")
+        auswahl_Frame2.place(rely=0.5325, relx=0.186)
+
+        auswahl_Frame3 = tk.LabelFrame(self, text="", width=540.5, height=237, background="white")
+        auswahl_Frame3.place(rely=0.5325, relx=0.5575)
+
+        columns=("Datum", "Uhrzeit", "Arzt")
+        self.treeview_gebu_Termin = ttk.Treeview(auswahl_Frame3, columns= columns, height=10,  show='headings')
+        self.treeview_gebu_Termin.pack()
+
+        # Überschrift für den Treeview festlegen
+        self.treeview_gebu_Termin.heading("Datum", text="Datum", anchor='center')
+        self.treeview_gebu_Termin.heading("Uhrzeit", text="Uhrzeit", anchor='center')
+        self.treeview_gebu_Termin.heading("Arzt", text="Arzt", anchor='center')
+
+        # Überschriften für den Treeview festlegen
+        for column in columns:
+            self.treeview_gebu_Termin.heading(column, text=column, anchor='center')
+        # Spalten konfigurieren, um die Werte zu zentrieren
+        for column in columns:
+            self.treeview_gebu_Termin.column(column, anchor='center')
+
+
+
+        testButton = tk.Button(auswahl_Frame2,text="buttonTest", width=10, height=2, command=TerminView)
+        testButton.place(rely=0, relx=0)
+
+
+
+
+
+
+
+        # self.update_image(self)  # Bildwechsel starten
+        self.update_time()  # Time Update
+
+
+    def open_Kalender_view(self):
+        kalender_view = TerminView(self)
+        # kalender_view.mainloop()
+    
+    def calculate_cost(self):
+        teeth = int(self.teeth_var.get())
+        filling = self.fill_material_var.get()
+        selected_krankenk = self.krankenk_var.get()
+        problematik = self.problematik_var.get()
+        # last_names2 = username
+
+        # Arbeitsblatt mit openpyxl öffnen
+        workbook = openpyxl.load_workbook('Database\Patienten_Zahnärzte_Kosten.xlsx')
+
+        if selected_krankenk == "privat":
+            sheet = workbook['privat']
+        elif selected_krankenk == "gesetzlich":
+            sheet = workbook['gesetzlich']
+        else:
+            sheet = workbook['freiwillig gesetzlich']
+
+        # Überschriften
+        sheet['A1'] = 'Patient'
+        sheet['B1'] = 'Anzahl zu behandelnder Zähne'
+        sheet['C1'] = 'Filling Material'
+        sheet['D1'] = 'Krankenkasse'
+        sheet['E1'] = 'Problematik'
+
+        # Werte
+        row = sheet.max_row + 1  # Nächste verfügbare Zeile
+        sheet[f'A{row}'] = last_names2
+        sheet[f'B{row}'] = teeth
+        sheet[f'C{row}'] = filling
+        sheet[f'D{row}'] = selected_krankenk
+        sheet[f'E{row}'] = problematik
+
+
+        # Datei speichern
+        workbook.save('Database\Patienten_Zahnärzte_Kosten.xlsx')
+
+        # Correspondance des options de combobox avec les pourcentages
+        if problematik == "Karies klein":
+            self.anzeige_Zeit_Label.config(text="0.25")
+            if filling == "normal":
+                if selected_krankenk == "gesetzlich":
+                    cost = 100 * teeth * 0.8
+            elif filling == "höherwertig":
+                    cost = 180 * teeth * 0.7
+            elif filling == "höchstwertig":
+                    cost = 250 * teeth * 0.5
+        if problematik == "Karies klein":
+            self.anzeige_Zeit_Label.config(text="0.25")
+            if filling == "normal":
+                if selected_krankenk == "privat":
+                    cost = 100 * teeth * 1
+            elif filling == "höherwertig":
+                    cost = 180 * teeth * 1
+            elif filling == "höchstwertig":
+                    cost = 250 * teeth * 0.95
+        if problematik == "Karies groß":
+            self.anzeige_Zeit_Label.config(text="1")
+            if filling == "normal":
+                if selected_krankenk == "gesetzlich":
+                    cost = 200 * teeth * 0.8
+            elif filling == "höherwertig":
+                if selected_krankenk == "gesetzlich":
+                    cost = 360 * teeth * 0.7
+            elif filling == "höchstwertig":
+                    cost = 480 * teeth * 0.5
+        if problematik == "Karies groß":
+            if filling == "normal":
+                self.anzeige_Zeit_Label.config(text="1")
+                if selected_krankenk == "privat":
+                    cost = 200 * teeth * 1
+            elif filling == "höherwertig":
+                    cost = 360 * teeth * 1
+            elif filling == "höchstwertig":
+                    cost = 480 * teeth * 0.95
+        if problematik == "Teilkrone":
+            if filling == "normal":
+                self.anzeige_Zeit_Label.config(text="1")
+                if selected_krankenk == "gesetzlich":
+                    cost = 1000 * teeth * 0.8
+            elif filling == "höherwertig":
+                    cost = 1800 * teeth * 0.7
+            elif filling == "höchstwertig":
+                    cost = 3100 * teeth * 0.30
+        if problematik == "Teilkrone":
+            if filling == "normal":
+                self.anzeige_Zeit_Label.config(text="1")
+                if selected_krankenk == "privat":
+                    cost = 1000 * teeth * 1
+            elif filling == "höherwertig":
+                    cost = 1800 * teeth * 0.95
+            elif filling == "höchstwertig":
+                    cost = 3100 * teeth * 0.85
+        if problematik == "krone":
+            if filling == "normal":
+                self.anzeige_Zeit_Label.config(text="2")
+                if selected_krankenk == "gesetzlich":
+                    cost = 2800 * teeth * 0.7
+            elif filling == "höherwertig":
+                    cost = 3600 * teeth * 0.5
+            elif filling == "höchstwertig":
+                    cost = 4200 * teeth * 0.25
+        if problematik == "krone":
+            if filling == "normal":
+                self.anzeige_Zeit_Label.config(text="2")
+                if selected_krankenk == "privat":
+                    cost = 2800 * teeth * 1
+            elif filling == "höherwertig":
+                    cost = 3600 * teeth * 0.85
+            elif filling == "höchstwertig":
+                    cost = 4200 * teeth * 0.75
+        if problematik == "Wurzelbehandlung":
+            self.anzeige_Zeit_Label.config(text="1.5")
+            if filling == "normal":
+                if selected_krankenk == "gesetzlich":
+                    cost = 750 * teeth * 0.9
+            elif filling == "höherwertig":
+                    self.anzeige_Zeit_Label.config(text="1.5")
+                    cost = 1200 * teeth * 0.70
+            elif filling == "höchstwertig":
+                    cost = 1500 * teeth * 0.45
+                    self.anzeige_Zeit_Label.config(text="2")
+        if problematik == "Wurzelbehandlung":
+            if filling == "normal":
+                if selected_krankenk == "privat":
+                    cost = 750 * teeth * 1
+            elif filling == "höherwertig":
+                    cost = 1200 * teeth * 0.95
+            elif filling == "höchstwertig":
+                    cost = 1500 * teeth * 0.85
+        
+
+        self.cost_var.set("Behandlungskosten: {}€".format(cost))
+        self.cost_label.config(textvariable=self.cost_var)
+    
+    def update_dentist_options(self, event):
+        selected_krankenk = self.krankenk_var.get()
+        if selected_krankenk == "gesetzlich":
+            allowed_dentists = ["Herr Dr. Kraft", "Herr Dr. Hausmann"]
+        elif selected_krankenk == "privat":
+            allowed_dentists = ["Herr Dr. Huber", "Frau Dr. Wurzel", "Frau Dr. Winkel"]
+        elif selected_krankenk == "freiwillig gesetzlich":
+            allowed_dentists = ["Frau Dr. Winkel", "Herr Dr. Hausmann"]
+        else:
+            allowed_dentists = ["Herr Dr. 1", "Herr Dr. 2", "Herr Dr. 3", "Herr Dr. 4", "Herr Dr. 5"]
+
+        self.dentist_var.set("")  # Clear the current selection
+        self.dentist_combobox['values'] = allowed_dentists  # Update the ComboBox widget
+
+    def updateDescription(self, event):
+         selected_Artz = self.dentist_combobox.get()
+         if selected_Artz == "Herr Dr. Huber":
+              self.description.config(background="#F8C9CF", text="Öffnungszeiten von Dr. Huber:\nMo-Fr: 8-12 Uhr und 14-16 Uhr\n\n Drücken sie bitte ganz unter\n auf Terminkalender")
+         if selected_Artz == "Herr Dr. Kraft":
+              self.description.config(background="#F8C9CF", text="Öffnungszeiten von Dr. Kraft:\nMo-Fr: 10-12 Uhr und 14-18 Uhr\n\n Drücken sie bitte ganz unter\n auf Terminkalender")
+         if selected_Artz == "Frau Dr. Winkel":
+              self.description.config(background="#F8C9CF", text="Öffnungszeiten von Dr. Winkel:\nMo-Fr: 8-14 Uhr\n\n Drücken sie bitte ganz unter\n auf Terminkalender")
+         if selected_Artz == "Herr Dr. Hausmann":
+              self.description.config(background="#F8C9CF", text="Öffnungszeiten von Dr. Hausmann:\nMo: 9-12 Uhr und Fr 12-16 Uhr\n\n Drücken sie bitte ganz unter\n auf Terminkalender")
+         if selected_Artz == "Frau Dr. Wurzel":
+              self.description.config(background="#F8C9CF", text="Öffnungszeiten von Dr. Wurzel:\nDi: 8-12 und Do: 12-18 Uhr\n\n Drücken sie bitte ganz unter\n auf Terminkalender")
+
+    def update_time(self):
+        current_datetime = datetime.now()
+        current_time = datetime.now().strftime("%H:%M:%S")  # Aktuelle Uhrzeit abrufen
+        current_date = current_datetime.strftime("%d.%m.%Y")  # Aktuelles Datum abrufen
+        self.current_time_label.config(text=current_time)  # Uhrzeit im Label aktualisieren
+
+        datetime_text = f"{current_date} {current_time}"  # Kombinierten Text erstellen
+        self.current_time_label.config(text=datetime_text)  # Text im Label aktualisieren
+
+        self.current_time_label.after(1000, self.update_time)  # Nach 1000 Millisekunden erneut aufrufen
 
     def logout(self):
         self.destroy()
@@ -161,6 +457,72 @@ class PatientView(tk.Toplevel):
         self.master.username_entry.delete(0, tk.END)
         self.master.password_entry.delete(0, tk.END)
 
+    def animate_label(self):
+        current_fg = self.firma_name_label["foreground"]
+        if current_fg == "white":
+            self.firma_name_label["foreground"] = "black"
+        else:
+            self.firma_name_label["foreground"] = "white"
+        self.firma_name_label.after(500, self.animate_label)  # Nach 500 Millisekunden erneut aufrufen
+
+class TerminView(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Terminkalender")
+        self.geometry("525x295")
+        self.config(bg="#3B6064")
+        self.maxsize(525, 295)
+        self.minsize(525, 295)
+
+        self.selected_label = None  # Variable zur Verfolgung des ausgewählten Labels
+        self.create_calendar()
+
+    def create_calendar(self):
+
+        # Tabelle für Stunden und Tage
+        auswahl_Frame2 = tk.LabelFrame(self, text="", width=550.5, height=237, background="white", bg="#FFF8E8")
+        auswahl_Frame2.place(rely=0.05, relx=0.016)
+
+        calendar_frame = tk.Frame(auswahl_Frame2)  # Parent Frame ist nun auswahl_Frame2
+        calendar_frame.pack()
+
+        # Liste mit Stunden (8-12 und 14-16 Uhr)
+        hours = [str(i) + ":00" for i in range(8, 13)] + [str(i) + ":00" for i in range(14, 17)]
+
+        # Liste mit Wochentagen (Montag bis Freitag)
+        days = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"]
+
+        # Labels für Stunden und Wochentage erstellen
+        for day in days:
+            day_label = tk.Label(calendar_frame, text=day, width=10, borderwidth=1, relief="solid")
+            day_label.grid(row=0, column=days.index(day) + 1, padx=5, pady=5)
+
+        for i, hour in enumerate(hours):
+            hour_label = tk.Label(calendar_frame, text=hour, width=10, borderwidth=1, relief="solid")
+            hour_label.grid(row=i + 1, column=0, padx=5, pady=5)
+
+            for day in days:
+                # Überprüfen, ob die Stunde in den erlaubten Zeiträumen liegt
+                if (8 <= int(hour.split(":")[0]) <= 12) or (14 <= int(hour.split(":")[0]) <= 16):
+                    # Hinzufügen der Einträge für jede Stunde und jeden Wochentag
+                    entry_label = tk.Label(calendar_frame, text="", width=10, borderwidth=1, relief="solid")
+                    entry_label.grid(row=i + 1, column=days.index(day) + 1, padx=5, pady=5)
+
+                    # Hinzufügen eines Event-Handlers für die Labels
+                    entry_label.bind("<Button-1>", lambda event, label=entry_label, day=day, hour=hour: self.select_entry(label, day, hour))
+
+    def select_entry(self, label, day, hour):
+        # Überprüfen, ob das Label bereits ausgewählt wurde
+        if self.selected_label == label:
+            # Wenn das Label bereits ausgewählt ist, wird der rote Hintergrund entfernt und der Text gelöscht
+            label.configure(background="white", text="")
+            self.selected_label = None
+        else:
+            # Wenn das Label noch nicht ausgewählt ist, wird es als ausgewählt markiert und der Text aktualisiert
+            if self.selected_label:
+                self.selected_label.configure(background="white", text="")  # Vorheriges Label zurücksetzen
+            label.configure(background="red", text=f"{day}\n{hour}")
+            self.selected_label = label
 
 class DentistView(tk.Toplevel):
     def __init__(self, master, last_names):
@@ -172,19 +534,22 @@ class DentistView(tk.Toplevel):
         self.config(background="#3B6064")
         self.last_names2 = last_names
 
+        # Zielgröße für das redimensionierte Bild
+        self.width = 530
+        self.height = 260
 
-        untersten_Frame = tk.Frame(self, width=1300, height=30, background="#5B949A")
-        untersten_Frame.pack(side="bottom", fill="y")
+        self.untersten_Frame = tk.Frame(self, width=1300, height=30, background="#5B949A")
+        self.untersten_Frame.pack(side="bottom", fill="y")
         
-        self.firma_name_label = tk.Label(untersten_Frame, text="Zahnärzte am Park GmbH", background="#5B949A", fg="white", font=("Arial", 11, "bold"))
+        self.firma_name_label = tk.Label(self.untersten_Frame, text="Zahnärzte am Park GmbH", background="#5B949A", fg="white", font=("Arial", 11, "bold"))
         # firma_name_label.pack(side="left", fill="x")
         self.firma_name_label.place(x=15, y=5)
         self.animate_label()  # Animation starten
 
-        self.current_time_label = tk.Label(untersten_Frame, text="", font=("Arial", 11, "bold"), fg="white", bg="#5B949A")
+        self.current_time_label = tk.Label(self.untersten_Frame, text="", font=("Arial", 11, "bold"), fg="white", bg="#5B949A")
         self.current_time_label.place(x=1150, y=5)
 
-        self.NameLabel = tk.Label(untersten_Frame, text= username, font=("Arial", 11, "bold"), background="#5B949A", fg="white")
+        self.NameLabel = tk.Label(self.untersten_Frame, text= username, font=("Arial", 11, "bold"), background="#5B949A", fg="white")
         self.NameLabel.place(x=600, y=5)
 
         self.termin_Frame = tk.LabelFrame(self, text="Terminkalender",border=0, background="white")
