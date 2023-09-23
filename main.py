@@ -53,7 +53,6 @@ class LoginWindow(tk.Tk):
         patient_regist_button = tk.Button(login_Frame, text="Artz sign Up", width= 17, height= 2, background="#3B6064", fg="white")   # TODO: command=self.open_new_window_Arzt_regist implementieren 
         patient_regist_button.place(x=237, y=320)        
 
-
     def login(self):
         password = None
 
@@ -86,7 +85,6 @@ class LoginWindow(tk.Tk):
         #     self.open_patient_view(username)  # Übergeben der Patienten-ID -------- db2
         else:
             messagebox.showerror("Fehler", "Ungultige Anmeldeinformationen")
-    
 
     def open_dentist_view(self, last_names):
         self.withdraw()
@@ -98,6 +96,9 @@ class LoginWindow(tk.Tk):
         self.withdraw()
         dentist_View = PatientView(self, patient_names)
         dentist_View.mainloop()
+
+def open_change_password_window():
+        change_password_window = ChangePasswordWindow()
 
 class PatientView(tk.Toplevel):
     def __init__(self, master, patient_names):
@@ -149,7 +150,7 @@ class PatientView(tk.Toplevel):
         self.Auslogen_button = tk.Button(self.left_frame, text="Auslogen",command=self.logout, width=25, bg="#DE5466", fg="white", font=("Arial", 9, "bold"))
         self.Auslogen_button.pack(side="bottom", pady=7)
 
-        self.einstellung_button = tk.Button(self.left_frame, text="Passwort Ändern", width=25, bg="#2A324B", fg="white", font=("Arial", 9, "bold")) # TODO: , command=open_change_password_window
+        self.einstellung_button = tk.Button(self.left_frame, text="Passwort Ändern", width=25, bg="#2A324B", fg="white", font=("Arial", 9, "bold"), command=open_change_password_window) # TODO: , command=open_change_password_window
         self.einstellung_button.pack(side="bottom", pady=10)
        
         self.untersten_Frame = tk.Frame(self, width=1058, height=30, background="#5B949A")
@@ -227,8 +228,10 @@ class PatientView(tk.Toplevel):
         self.cost_label = tk.Label(auswahl_Frame1, text="Behandlungskosten: $0.00", pady=20, background="#B2CFD2", height=3, padx=60, justify="center", font=("Arial", 10, "bold"))
         self.cost_label.place(rely=0.446, relx=0.4)
 
-        self.buttonBerechnen = tk.Button(auswahl_Frame1, text="Kosten Berechnen",background="#3B6064", fg="white", command=self.calculate_cost, font=("Arial", 10, "bold"), padx=25, pady=10)
-        self.buttonBerechnen.place(rely=0.8, relx=0.4516)
+        self.buttonBerechnen = tk.Button(auswahl_Frame1, text="Kosten Berechnen",background="#3B6064", fg="white", command=self.calculate_cost, font=("Arial", 10, "bold"), padx=5, pady=10)
+        self.buttonBerechnen.place(rely=0.8, relx=0.399)
+        self.buttonBerechnen = tk.Button(auswahl_Frame1, text="Termin Buchen",background="#3B6064", fg="white", command=TerminView, font=("Arial", 10, "bold"), padx=10, pady=10)
+        self.buttonBerechnen.place(rely=0.8, relx=0.5516)
 
         self.terminDescr = tk.Frame(auswahl_Frame1, background="white", width=266, height=280)
         self.terminDescr.place(rely=0.03, relx=0.74)
@@ -262,8 +265,8 @@ class PatientView(tk.Toplevel):
 
 
 
-        testButton = tk.Button(auswahl_Frame2,text="buttonTest", width=10, height=2, command=TerminView)
-        testButton.place(rely=0, relx=0)
+        # testButton = tk.Button(auswahl_Frame2,text="buttonTest", width=10, height=2, command=TerminView)
+        # testButton.place(rely=0, relx=0)
 
 
 
@@ -273,8 +276,7 @@ class PatientView(tk.Toplevel):
 
         # self.update_image(self)  # Bildwechsel starten
         self.update_time()  # Time Update
-
-
+    
     def open_Kalender_view(self):
         kalender_view = TerminView(self)
         # kalender_view.mainloop()
@@ -284,7 +286,9 @@ class PatientView(tk.Toplevel):
         filling = self.fill_material_var.get()
         selected_krankenk = self.krankenk_var.get()
         problematik = self.problematik_var.get()
-        # last_names2 = username
+        last_names2 = username
+
+        ## TODO: wenn Teeth == 0 or wenn filling == 0 or ....... messagebox.showerror("Fehler", "Anzahl teeth eingeben")
 
         # Arbeitsblatt mit openpyxl öffnen
         workbook = openpyxl.load_workbook('Database\Patienten_Zahnärzte_Kosten.xlsx')
@@ -676,6 +680,80 @@ class DentistView(tk.Toplevel):
         self.master.username_entry.delete(0, tk.END)
         self.master.password_entry.delete(0, tk.END)
   
+
+class ChangePasswordWindow(tk.Toplevel):
+    def __init__(self):
+        super().__init__()
+        self.title("Passwort Änderung")
+        self.geometry("500x400")
+        self.config(background="#5B949A")
+        self.resizable(False, False)
+
+        self.old_password_label = tk.Label(self, text="Alte Passwort:", background="#5B949A", font=("Arial", 10, "bold"))
+        self.old_password_label.place(rely=0.15, relx=0.18)
+        self.old_password_entry = tk.Entry(self, show="*")
+        self.old_password_entry.place(rely=0.15, relx=0.46)
+
+        self.new_password_label = tk.Label(self, text="Neue Passwort:", background="#5B949A", font=("Arial", 10, "bold"))
+        self.new_password_label.place(rely=0.25, relx=0.18)
+        self.new_password_entry = tk.Entry(self, show="*")
+        self.new_password_entry.place(rely=0.25, relx=0.46)
+
+        self.confirm_password_label = tk.Label(self, text="Pass Bestätigen:", background="#5B949A", font=("Arial", 10, "bold"))
+        self.confirm_password_label.place(rely=0.37, relx=0.18)
+        self.confirm_password_entry = tk.Entry(self, show="*")
+        self.confirm_password_entry.place(rely=0.37, relx=0.46)
+
+        self.change_button = tk.Button(self, text="Bestätigen", background="white", command=self.change_password, padx= 40, pady=10)
+        self.change_button.place(rely=0.55, relx=0.35)
+
+    def change_password(self):
+        old_password = self.old_password_entry.get()
+        new_password = self.new_password_entry.get()
+        confirm_password = self.confirm_password_entry.get()
+
+        # Vérification si les champs de mot de passe sont vides
+        if not old_password or not new_password or not confirm_password:
+            messagebox.showerror("Fehler", "Bitte Felder ausfüllen!!")
+            return
+
+        # Vérification si le nouveau mot de passe correspond à la confirmation
+        if new_password != confirm_password:
+            messagebox.showerror("Fehler", "Das neue Passwort stimmt nicht mit der Bestätigung überein.")
+            return
+
+        # Vérification si le mot de passe actuel est correct (exemple de mot de passe actuel : "password")
+        current_password = self.master.get_password()
+        if old_password != current_password:
+            messagebox.showerror("Fehler", "Das aktuelle Passwort ist inkorrekt.")
+            return
+
+        workbook = openpyxl.load_workbook("Patienten_Zahnärzte_Kosten.xlsx")
+        sheet = workbook["Stamm-Patienten"]
+
+        # Recherche de l'index de la ligne correspondant à l'utilisateur
+        # username = self.username_entry.get()
+        username = self.username
+        row_index = None
+        for row in sheet.iter_rows(min_row=5, min_col=3, max_col=4):
+            if row[0].value == username:
+                row_index = row[0].row
+                break
+        if row_index is not None:
+        # Mise à jour du mot de passe dans la colonne appropriée
+            sheet.cell(row=row_index, column=4).value = new_password
+            workbook.save("Patienten_Zahnärzte_Kosten.xlsx")
+            messagebox.showinfo("Succès", "Le mot de passe a été changé avec succès.")
+            self.destroy()
+        else:
+            messagebox.showerror("Erreur", "Utilisateur non trouvé dans la base de données.")
+
+
+        messagebox.showinfo("Succès", "Le mot de passe a été changé avec succès.")
+        self.destroy()  
+
+
+
 
 # Hauptprogramm
 if __name__ == "__main__":
