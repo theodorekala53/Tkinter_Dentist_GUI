@@ -48,9 +48,9 @@ class LoginWindow(tk.Tk):
         # Anmeldebutton und Registrierungsbutton
         login_button = tk.Button(login_Frame, text="Login", width= 41, height= 2, background="#3B6064", fg="white", command=self.login)   # TODO: command=self.login implementieren 
         login_button.place(x=70, y=260)        
-        arzt_regist_button = tk.Button(login_Frame, text="Patient sign Up", width= 17, height= 2, background="#3B6064", fg="white")   # TODO: command=self.open_new_window_Patient_regist implementieren 
+        arzt_regist_button = tk.Button(login_Frame, text="Patient sign Up", width= 17, height= 2, background="#3B6064", fg="white", command=self.open_new_window_Patient_regist)   # TODO: command=self.open_new_window_Patient_regist implementieren 
         arzt_regist_button.place(x=70, y=320)        
-        patient_regist_button = tk.Button(login_Frame, text="Artz sign Up", width= 17, height= 2, background="#3B6064", fg="white")   # TODO: command=self.open_new_window_Arzt_regist implementieren 
+        patient_regist_button = tk.Button(login_Frame, text="Artz sign Up", width= 17, height= 2, background="#3B6064", fg="white", command = self.open_new_window_Arzt_regist)   # TODO: command=self.open_new_window_Arzt_regist implementieren 
         patient_regist_button.place(x=237, y=320)        
 
     def login(self):
@@ -96,6 +96,179 @@ class LoginWindow(tk.Tk):
         self.withdraw()
         dentist_View = PatientView(self, patient_names)
         dentist_View.mainloop()
+
+    def open_new_window_Arzt_regist(self):
+        self.withdraw()  
+
+        new_window = tk.Toplevel()
+        new_window.title("Arzt Registrierung")
+        new_window.geometry("700x450")
+        new_window.config(background="#2A324B")
+
+        # Variables
+        self.name_var = tk.StringVar()
+        self.password_var = tk.StringVar()
+        self.problematik_var = tk.StringVar()
+        self.dentist_var = tk.StringVar()
+        self.teeth_var = tk.StringVar()
+  
+
+        name_Label = tk.Label(new_window, text="Name:", font=("Arial", 10, "bold"), fg="white", background="#2A324B")
+        name_Label.place(rely=0.2, relx=0.09)
+        name_Label_Entry = tk.Entry(new_window, textvariable=self.name_var)
+        name_Label_Entry.place(rely=0.2, relx=0.29)
+
+        passwort_Label = tk.Label(new_window, text="passwort:", font=("Arial", 10, "bold"), fg="white", background="#2A324B")
+        passwort_Label.place(rely=0.3, relx=0.09)
+        passwort_Label_Entry = tk.Entry(new_window, textvariable=self.password_var, show ='*')
+        passwort_Label_Entry.place(rely=0.30, relx=0.29)
+        
+        Krankenkassenart_Label = tk.Label(new_window, text="Krankenkassenart:", font=("Arial", 10, "bold"), fg="white", background="#2A324B")
+        Krankenkassenart_Label.place(rely=0.4, relx=0.09)
+        krankenkassenarten = ["gesetzlich", "freiwillig gesetzlich", "privat"]
+        self.krankenk_var = tk.StringVar(self)
+        self.combobox2 = Combobox(new_window, values=krankenkassenarten, textvariable=self.krankenk_var, width=24)  # Bind the selection event
+        self.combobox2.current(0)  # Set the default selection
+        self.combobox2.place(rely=0.4, relx=0.29)
+
+        # register_button = tk.Button(new_window, text="Register", font=("Arial", 11, "bold"), command=self.save_data)
+        self.register_button = tk.Button(new_window, text="Registrieren", font=("Arial", 11, "bold"), command=self.save_data)
+        self.register_button.place(rely=0.55, relx=0.19)
+
+        self.Auslogen_button = tk.Button(new_window, text="Zurück",command=self.logout, width=25, bg="#DE5466", fg="white", font=("Arial", 9, "bold"))
+        self.Auslogen_button.pack(side="bottom", pady=7)
+
+        name_Label_Entry.delete(0, tk.END)
+        passwort_Label_Entry.delete(0, tk.END)
+        self.combobox2.delete(0, tk.END)
+    	
+        # new_window.protocol("WM_DELETE_WINDOW", self.on_new_window_close)
+    
+    def open_new_window_Patient_regist(self):
+        self.withdraw()  
+
+        new_window = tk.Toplevel()
+        new_window.title("Patient Registrierung")
+        new_window.geometry("700x450")
+        new_window.config(background="#2A324B")
+
+
+        # Variables
+        self.name_var = tk.StringVar()
+        self.password_var = tk.StringVar()
+        self.problematik_var = tk.StringVar()
+        self.dentist_var = tk.StringVar()
+        self.teeth_var = tk.StringVar()
+  
+
+        name_Label = tk.Label(new_window, text="Name:", font=("Arial", 10, "bold"), fg="white", background="#2A324B")
+        name_Label.place(rely=0.1, relx=0.05)
+        name_Label_Entry = tk.Entry(new_window, textvariable=self.name_var)
+        name_Label_Entry.place(rely=0.1, relx=0.25)
+
+        passwort_Label = tk.Label(new_window, text="passwort:", font=("Arial", 10, "bold"), fg="white", background="#2A324B")
+        passwort_Label.place(rely=0.2, relx=0.05)
+        passwort_Label_Entry = tk.Entry(new_window, show ='*', textvariable=self.password_var)
+        passwort_Label_Entry.place(rely=0.20, relx=0.25)
+        
+        Krankenkassenart_Label = tk.Label(new_window, text="Krankenkassenart:", font=("Arial", 10, "bold"), fg="white", background="#2A324B")
+        Krankenkassenart_Label.place(rely=0.3, relx=0.05)
+        krankenkassenarten = ["gesetzlich", "freiwillig gesetzlich", "privat"]
+        self.krankenk_var = tk.StringVar(self)
+        self.combobox2 = Combobox(new_window, values=krankenkassenarten, textvariable=self.krankenk_var, width=24)  # Bind the selection event
+        self.combobox2.current(0)  # Set the default selection
+        self.combobox2.place(rely=0.3, relx=0.25)
+
+        Problematik_label = tk.Label(new_window, text="Problematik", font=("Arial", 10, "bold"), fg="white", background="#2A324B")
+        Problematik_label.place(rely=0.4, relx=0.05)
+        Problem_options = ["Karies klein", "Karies groß", "Teilkrone", "krone", "Wurzelbehandlung"]
+        self.combobox1 = Combobox(new_window, textvariable=self.problematik_var, values=Problem_options)
+        self.problematik_var.set(Problem_options[0])  # Set the default selection
+        self.combobox1.place(rely=0.4, relx=0.25)   
+
+        self.Zahnanzahl_label = tk.Label(new_window, text="Zahnanzahl",  font=("Arial", 10, "bold"), fg="white", background="#2A324B")
+        self.Zahnanzahl_label.place(rely=0.5, relx=0.05)
+        self.Zahnanzahl_entry = tk.Entry(new_window, background="#f1f1f1", textvariable=self.teeth_var)
+        self.Zahnanzahl_entry.place(rely=0.5, relx=0.25) 
+
+        # register_button = tk.Button(new_window, text="Register", font=("Arial", 11, "bold"), command=self.save_data)
+        self.register_button = tk.Button(new_window, text="Registrieren", font=("Arial", 11, "bold"), command=self.save_data2)
+        self.register_button.place(rely=0.65, relx=0.16)
+
+        self.Auslogen_button = tk.Button(new_window, text="Zurück",command=self.logout, width=25, bg="#DE5466", fg="white", font=("Arial", 9, "bold"))
+        self.Auslogen_button.pack(side="bottom", pady=7)
+
+        name_Label_Entry.delete(0, tk.END)
+        passwort_Label_Entry.delete(0, tk.END)
+        self.combobox2.delete(0, tk.END)
+        self.combobox1.delete(0, tk.END)
+        self.Zahnanzahl_entry.delete(0, tk.END)
+
+        new_window.protocol("WM_DELETE_WINDOW", self.on_new_window_close)
+
+    def save_data(self):
+        # Récupérer les données saisies
+        name = self.name_var.get()
+        password = self.password_var.get()
+        krankenkassenart = self.krankenk_var.get()
+
+        # Charger le fichier Excel existant
+        workbook = openpyxl.load_workbook('Database/Patienten_Zahnärzte_Kosten.xlsx')
+        # Sélectionner la feuille de calcul spécifiée
+        sheet = workbook['Zahnärzte']
+        # Trouver la première ligne vide à partir de la ligne 4 (lignes 1 à 3 sont des en-têtes)
+        row = 3
+        while sheet.cell(row=row, column=2).value:
+            row += 1
+        # Enregistrer les données dans les colonnes spécifiées
+        sheet.cell(row=row, column=2).value = name
+        sheet.cell(row=row, column=3).value = password
+        sheet.cell(row=row, column=4).value = krankenkassenart
+
+        # Sauvegarder les modifications dans le fichier Excel
+        workbook.save('Database/Patienten_Zahnärzte_Kosten.xlsx')
+
+        # Afficher un message de succès
+        tk.messagebox.showinfo("Success", "Registrierung Erfolgreich")
+
+    def save_data2(self):
+        # Récupérer les données saisies
+        name = self.name_var.get()
+        password = self.password_var.get()
+        krankenkassenart = self.krankenk_var.get()
+
+        # Charger le fichier Excel existant
+        workbook = openpyxl.load_workbook('Database/Patienten_Zahnärzte_Kosten.xlsx')
+        # Sélectionner la feuille de calcul spécifiée
+        sheet = workbook['Stamm-Patienten']
+        # Trouver la première ligne vide à partir de la ligne 4 (lignes 1 à 3 sont des en-têtes)
+        row = 3
+        while sheet.cell(row=row, column=2).value:
+            row += 1
+        # Enregistrer les données dans les colonnes spécifiées
+        sheet.cell(row=row, column=2).value = name
+        sheet.cell(row=row, column=3).value = password
+        sheet.cell(row=row, column=4).value = krankenkassenart
+
+        # Sauvegarder les modifications dans le fichier Excel
+        workbook.save('Database/Patienten_Zahnärzte_Kosten.xlsx')
+
+        # Afficher un message de succès
+        tk.messagebox.showinfo("Success", "Registrierung Erfolgreich")
+    
+    def logout(self):
+        self.withdraw()
+        self.deiconify()
+        # self.master.deiconify()
+        # self.master.username_entry.delete(0, tk.END)
+        # self.master.password_entry.delete(0, tk.END)
+
+    def get_password(self):
+        return self.password_entry.get()
+
+    def on_new_window_close(self):
+        self.deiconify()  # Réaffiche la première fenêtre lorsque la deuxième fenêtre est fermée
+        self.destroy()
 
 def open_change_password_window():
         change_password_window = ChangePasswordWindow()
@@ -680,10 +853,10 @@ class DentistView(tk.Toplevel):
         self.master.username_entry.delete(0, tk.END)
         self.master.password_entry.delete(0, tk.END)
   
-
 class ChangePasswordWindow(tk.Toplevel):
-    def __init__(self):
+    def __init__(self, password_manager):
         super().__init__()
+        self.password_manager = password_manager
         self.title("Passwort Änderung")
         self.geometry("500x400")
         self.config(background="#5B949A")
@@ -751,8 +924,6 @@ class ChangePasswordWindow(tk.Toplevel):
 
         messagebox.showinfo("Succès", "Le mot de passe a été changé avec succès.")
         self.destroy()  
-
-
 
 
 # Hauptprogramm
