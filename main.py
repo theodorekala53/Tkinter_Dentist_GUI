@@ -145,7 +145,7 @@ class LoginWindow(tk.Tk):
         # new_window.protocol("WM_DELETE_WINDOW", self.on_new_window_close)
     
     def open_new_window_Patient_regist(self):
-        self.withdraw()  
+        # self.withdraw()  
 
         new_window = tk.Toplevel()
         new_window.title("Patient Registrierung")
@@ -231,24 +231,68 @@ class LoginWindow(tk.Tk):
         # Afficher un message de succès
         tk.messagebox.showinfo("Success", "Registrierung Erfolgreich")
 
+    def is_name_exists(self, name, sheet):
+        # Vérifie si le nom existe déjà dans la colonne 3 (colonne des noms)
+        for row in sheet.iter_rows(min_row=4, min_col=3, max_col=3):
+            if row[0].value == name:
+                return True
+        return False
+
+    def generate_unique_name(self, name, sheet):
+        # Wenn ein Patient denselben Namen hat, generieren Sie einen eindeutigen Namen mit einer numerischen Erweiterung
+        name_count = 0
+        modified_name = name
+        while self.is_name_exists(modified_name, sheet):
+            name_count += 1
+            modified_name = f"{name}_{name_count}"
+        return modified_name
+
     def save_data2(self):
-        # Récupérer les données saisies
+        # Daten aus den Eingabefeldern abrufen
         name = self.name_var.get()
         password = self.password_var.get()
         krankenkassenart = self.krankenk_var.get()
+        zahn_probl = self.problematik_var.get()
+        zahn_anzahl = self.teeth_var.get()
 
-        # Charger le fichier Excel existant
+        # Vorhandenes Excel-Datei laden
         workbook = openpyxl.load_workbook('Database/Patienten_Zahnärzte_Kosten.xlsx')
-        # Sélectionner la feuille de calcul spécifiée
+        # Gewünschtes Tabellenblatt auswählen
         sheet = workbook['Stamm-Patienten']
-        # Trouver la première ligne vide à partir de la ligne 4 (lignes 1 à 3 sont des en-têtes)
-        row = 3
-        while sheet.cell(row=row, column=2).value:
-            row += 1
-        # Enregistrer les données dans les colonnes spécifiées
-        sheet.cell(row=row, column=2).value = name
-        sheet.cell(row=row, column=3).value = password
-        sheet.cell(row=row, column=4).value = krankenkassenart
+
+        # Überprüfen, ob der Name bereits in den Daten vorhanden ist
+        if self.is_name_exists(name, sheet):
+            # Wenn der Name bereits vorhanden ist, fragen Sie den Benutzer, ob er sich bereits registriert hat.
+            response = tk.messagebox.askquestion("Frage", f"Es existiert bereits ein Eintrag für '{name}'. Sind Sie bereits registriert?")
+            if response == 'yes':
+                # Wenn der Benutzer bereits registriert ist, aktualisieren Sie das Passwort und die dentalen Probleme.
+                for row in sheet.iter_rows(min_row=4, min_col=3, max_col=3):
+                    if row[0].value == name:
+                        row_index = row[0].row
+                        # Aktualisieren Sie das Passwort und die anderen Spaltenwerte (z.B., Krankenkasse, etc.) nach Bedarf
+                        sheet.cell(row=row_index, column=4).value = password
+                        # Fügen Sie neue dental Probleme hinzu
+                        current_problematik = sheet.cell(row=row_index, column=6).value
+                        new_problematik = f"{current_problematik}, {zahn_probl}"
+                        sheet.cell(row=row_index, column=6).value = new_problematik
+                        break
+            else:
+                # Wenn der Benutzer nicht bereits registriert ist, können Sie hier entsprechende Aktionen durchführen.
+                pass
+        else:
+            # Wenn der Name nicht vorhanden ist, generieren Sie einen eindeutigen Namen
+            unique_name = self.generate_unique_name(name, sheet)
+
+            # Finden Sie die erste leere Zeile ab Zeile 4 (Zeilen 1 bis 3 sind Überschriften).
+            row = 4
+            while sheet.cell(row=row, column=3).value:
+                row += 1
+            # Daten in die entsprechenden Spalten eintragen
+            sheet.cell(row=row, column=3).value = unique_name
+            sheet.cell(row=row, column=4).value = password
+            sheet.cell(row=row, column=5).value = krankenkassenart
+            sheet.cell(row=row, column=6).value = zahn_probl
+            sheet.cell(row=row, column=7).value = zahn_anzahl
 
         # Sauvegarder les modifications dans le fichier Excel
         workbook.save('Database/Patienten_Zahnärzte_Kosten.xlsx')
@@ -854,9 +898,8 @@ class DentistView(tk.Toplevel):
         self.master.password_entry.delete(0, tk.END)
   
 class ChangePasswordWindow(tk.Toplevel):
-    def __init__(self, password_manager):
+    def __init__(self):
         super().__init__()
-        self.password_manager = password_manager
         self.title("Passwort Änderung")
         self.geometry("500x400")
         self.config(background="#5B949A")
@@ -881,7 +924,7 @@ class ChangePasswordWindow(tk.Toplevel):
         self.change_button.place(rely=0.55, relx=0.35)
 
     def change_password(self):
-        old_password = self.old_password_entry.get()
+        old_password = LoginWindow.old_password_entry.get()
         new_password = self.new_password_entry.get()
         confirm_password = self.confirm_password_entry.get()
 
@@ -895,35 +938,35 @@ class ChangePasswordWindow(tk.Toplevel):
             messagebox.showerror("Fehler", "Das neue Passwort stimmt nicht mit der Bestätigung überein.")
             return
 
-        # Vérification si le mot de passe actuel est correct (exemple de mot de passe actuel : "password")
-        current_password = self.master.get_password()
-        if old_password != current_password:
-            messagebox.showerror("Fehler", "Das aktuelle Passwort ist inkorrekt.")
-            return
+        # # Vérification si le mot de passe actuel est correct (exemple de mot de passe actuel : "password")
+        # current_password = self.master.get_password()
+        # if old_password != current_password:
+        #     messagebox.showerror("Fehler", "Das aktuelle Passwort ist inkorrekt.")
+        #     return
 
-        workbook = openpyxl.load_workbook("Patienten_Zahnärzte_Kosten.xlsx")
-        sheet = workbook["Stamm-Patienten"]
+        # workbook = openpyxl.load_workbook("Patienten_Zahnärzte_Kosten.xlsx")
+        # sheet = workbook["Stamm-Patienten"]
 
-        # Recherche de l'index de la ligne correspondant à l'utilisateur
-        # username = self.username_entry.get()
-        username = self.username
-        row_index = None
-        for row in sheet.iter_rows(min_row=5, min_col=3, max_col=4):
-            if row[0].value == username:
-                row_index = row[0].row
-                break
-        if row_index is not None:
-        # Mise à jour du mot de passe dans la colonne appropriée
-            sheet.cell(row=row_index, column=4).value = new_password
-            workbook.save("Patienten_Zahnärzte_Kosten.xlsx")
-            messagebox.showinfo("Succès", "Le mot de passe a été changé avec succès.")
-            self.destroy()
-        else:
-            messagebox.showerror("Erreur", "Utilisateur non trouvé dans la base de données.")
+        # # Recherche de l'index de la ligne correspondant à l'utilisateur
+        # # username = self.username_entry.get()
+        # username = self.username
+        # row_index = None
+        # for row in sheet.iter_rows(min_row=5, min_col=3, max_col=4):
+        #     if row[0].value == username:
+        #         row_index = row[0].row
+        #         break
+        # if row_index is not None:
+        # # Mise à jour du mot de passe dans la colonne appropriée
+        #     sheet.cell(row=row_index, column=4).value = new_password
+        #     workbook.save("Patienten_Zahnärzte_Kosten.xlsx")
+        #     messagebox.showinfo("Succès", "Le mot de passe a été changé avec succès.")
+        #     self.destroy()
+        # else:
+        #     messagebox.showerror("Erreur", "Utilisateur non trouvé dans la base de données.")
 
 
-        messagebox.showinfo("Succès", "Le mot de passe a été changé avec succès.")
-        self.destroy()  
+        # messagebox.showinfo("Succès", "Le mot de passe a été changé avec succès.")
+        # self.destroy()  
 
 
 # Hauptprogramm
