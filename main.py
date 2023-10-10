@@ -13,6 +13,7 @@ from tkinter import messagebox
 from PIL import ImageTk, Image, Image
 from tkinter import Label, PhotoImage
 from tkinter.ttk import Combobox
+from tkinter.font import Font
 
 #database für Ärzte (beim Login)
 db = pd.read_excel("Database/Patienten_Zahnärzte_Kosten.xlsx", sheet_name="Zahnärzte", header=None)
@@ -163,12 +164,12 @@ class LoginWindow(tk.Tk):
 
         name_Label = tk.Label(new_window, text="Name:", font=("Arial", 10, "bold"), fg="white", background="#2A324B")
         name_Label.place(rely=0.1, relx=0.05)
-        name_Label_Entry = tk.Entry(new_window, textvariable=self.name_var)
+        name_Label_Entry = tk.Entry(new_window, textvariable=self.name_var, width=27)
         name_Label_Entry.place(rely=0.1, relx=0.25)
 
         passwort_Label = tk.Label(new_window, text="passwort:", font=("Arial", 10, "bold"), fg="white", background="#2A324B")
         passwort_Label.place(rely=0.2, relx=0.05)
-        passwort_Label_Entry = tk.Entry(new_window, show ='*', textvariable=self.password_var)
+        passwort_Label_Entry = tk.Entry(new_window, show ='*', textvariable=self.password_var, width=27)
         passwort_Label_Entry.place(rely=0.20, relx=0.25)
         
         Krankenkassenart_Label = tk.Label(new_window, text="Krankenkassenart:", font=("Arial", 10, "bold"), fg="white", background="#2A324B")
@@ -182,13 +183,13 @@ class LoginWindow(tk.Tk):
         Problematik_label = tk.Label(new_window, text="Problematik", font=("Arial", 10, "bold"), fg="white", background="#2A324B")
         Problematik_label.place(rely=0.4, relx=0.05)
         Problem_options = ["Karies klein", "Karies groß", "Teilkrone", "krone", "Wurzelbehandlung"]
-        self.combobox1 = Combobox(new_window, textvariable=self.problematik_var, values=Problem_options)
+        self.combobox1 = Combobox(new_window, textvariable=self.problematik_var, values=Problem_options, width=24)
         self.problematik_var.set(Problem_options[0])  # Set the default selection
         self.combobox1.place(rely=0.4, relx=0.25)   
 
         self.Zahnanzahl_label = tk.Label(new_window, text="Zahnanzahl",  font=("Arial", 10, "bold"), fg="white", background="#2A324B")
         self.Zahnanzahl_label.place(rely=0.5, relx=0.05)
-        self.Zahnanzahl_entry = tk.Entry(new_window, background="#f1f1f1", textvariable=self.teeth_var)
+        self.Zahnanzahl_entry = tk.Entry(new_window, background="#f1f1f1", textvariable=self.teeth_var, width=27)
         self.Zahnanzahl_entry.place(rely=0.5, relx=0.25) 
 
         # register_button = tk.Button(new_window, text="Register", font=("Arial", 11, "bold"), command=self.save_data)
@@ -692,11 +693,15 @@ class TerminView(tk.Tk):
         self.title("Terminkalender")
         self.geometry("525x295")
         self.config(bg="#3B6064")
-        self.maxsize(525, 295)
-        self.minsize(525, 295)
+        self.maxsize(525, 355)
+        self.minsize(525, 355)
 
         self.selected_label = None  # Variable zur Verfolgung des ausgewählten Labels
         self.create_calendar()
+
+        self.buch_button = tk.Button(self, text="Termin bestätigen", background="white", fg="black", font=("Arial", 13))
+        self.buch_button.pack(side="bottom",  padx=5, pady=10, ipadx=50)
+
 
     def create_calendar(self):
 
@@ -776,21 +781,53 @@ class DentistView(tk.Toplevel):
         self.termin_Frame = tk.LabelFrame(self, text="Terminkalender",border=0, background="white")
         self.termin_Frame.place(x=7, y=7)
 
-        columns=("Patientname", "Behandlungen", "Gebugte Zeit")
-        self.treeview_gebu_Termin = ttk.Treeview(self.termin_Frame, columns= columns, height=11, show='headings')
+        columns=("Patient", "Problematik", "Filling Material", "Anzahl zu behandelnder Zähne")
+        self.treeview_gebu_Termin = ttk.Treeview(self.termin_Frame, columns= columns, height=12, show='headings')
         self.treeview_gebu_Termin.pack()
 
         # Überschrift für den Treeview festlegen
-        self.treeview_gebu_Termin.heading("Patientname", text="Patientname", anchor='center')
-        self.treeview_gebu_Termin.heading("Behandlungen", text="Behandlungen", anchor='center')
-        self.treeview_gebu_Termin.heading("Gebugte Zeit", text="Gebugte Zeit", anchor='center')
+        self.treeview_gebu_Termin.heading("Patient", text="Patientname", anchor='center')
+        self.treeview_gebu_Termin.heading("Problematik", text="Behandlungen", anchor='center')
+        self.treeview_gebu_Termin.heading("Filling Material", text="Material", anchor='center')
+        self.treeview_gebu_Termin.heading("Anzahl zu behandelnder Zähne", text="Zähne", anchor='center')
 
-        self.treeview_gebu_Termin.column("Patientname", width=250)
-        self.treeview_gebu_Termin.column("Behandlungen", width=250)
-        self.treeview_gebu_Termin.column("Gebugte Zeit", width=250)
+        self.treeview_gebu_Termin.column("Patient", width=150)
+        self.treeview_gebu_Termin.column("Problematik", width=200)
+        self.treeview_gebu_Termin.column("Filling Material", width=200)
+        self.treeview_gebu_Termin.column("Anzahl zu behandelnder Zähne", width=200)
+
+        # Überschriften für den Treeview festlegen
+        for column in columns:
+            self.treeview_gebu_Termin.heading(column, text=column, anchor='center')
+        # Spalten konfigurieren, um die Werte zu zentrieren
+        for column in columns:
+            self.treeview_gebu_Termin.column(column, anchor='center')
+        style = ttk.Style()
+        style.configure('treeview_gebu_Termin', rowheight=30)  # Hier können Sie die gewünschte Höhe anpassen
 
         self.imageView_frame = tk.Frame(self, height=260, width=530)
         self.imageView_frame.place(x=765, y=7)
+
+        df = None  # Initialisation par défaut de df
+        if username == "Huber" or username == "Wurzel":
+            df = pd.read_excel("Database\Patienten_Zahnärzte_Kosten.xlsx", sheet_name="privat")
+        elif username == "Kraft":
+             df = pd.read_excel("Database\Patienten_Zahnärzte_Kosten.xlsx", sheet_name="gesetzlich")
+        # elif username == "Winkel":
+        elif username == "Hausmann":
+             df1 = pd.read_excel("Database\Patienten_Zahnärzte_Kosten.xlsx", sheet_name="gesetzlich")
+             df2 = pd.read_excel("Database\Patienten_Zahnärzte_Kosten.xlsx", sheet_name="freiwillig gesetzlich")
+             df = pd.concat([df1, df2])
+             
+        if df is not None:
+            font = Font(size=11, weight="bold")
+            for index, row in df.iterrows():
+                self.treeview_gebu_Termin.insert("", "end", values=(row[0], row[4], row[2], row[1]), tags="custom_font")
+        
+            self.treeview_gebu_Termin.tag_configure("custom_font", font=font)
+        style = ttk.Style()
+        style.configure("treeview_gebu_Termin", rowheight=40)  # Augmenter la valeur de rowheight pour augmenter l'espace
+
 
         # Zielgröße für das redimensionierte Bild
         self.width = 530
@@ -853,7 +890,6 @@ class DentistView(tk.Toplevel):
         self.update_image()  # Bildwechsel starten
         self.update_time()  # Time Update
 
-
     # Funktion zum Aktualisieren des Bildes
     def update_image(self):
         # Nächsten Bildindex berechnen
@@ -869,7 +905,6 @@ class DentistView(tk.Toplevel):
         # Timer für das nächste Bild setzen (nach 4 Sekunden)
         self.after(3000, self.update_image)
 
-
     def update_time(self):
         current_datetime = datetime.now()
         current_time = datetime.now().strftime("%H:%M:%S")  # Aktuelle Uhrzeit abrufen
@@ -881,7 +916,6 @@ class DentistView(tk.Toplevel):
 
         self.current_time_label.after(1000, self.update_time)  # Nach 1000 Millisekunden erneut aufrufen
 
-
     def animate_label(self):
         current_fg = self.firma_name_label["foreground"]
         if current_fg == "white":
@@ -889,7 +923,6 @@ class DentistView(tk.Toplevel):
         else:
             self.firma_name_label["foreground"] = "white"
         self.firma_name_label.after(500, self.animate_label)  # Nach 500 Millisekunden erneut aufrufen
-
 
     def logout(self):
         self.destroy()
@@ -924,7 +957,7 @@ class ChangePasswordWindow(tk.Toplevel):
         self.change_button.place(rely=0.55, relx=0.35)
 
     def change_password(self):
-        old_password = LoginWindow.old_password_entry.get()
+        old_password = self.old_password_entry.get()
         new_password = self.new_password_entry.get()
         confirm_password = self.confirm_password_entry.get()
 
@@ -938,35 +971,35 @@ class ChangePasswordWindow(tk.Toplevel):
             messagebox.showerror("Fehler", "Das neue Passwort stimmt nicht mit der Bestätigung überein.")
             return
 
-        # # Vérification si le mot de passe actuel est correct (exemple de mot de passe actuel : "password")
-        # current_password = self.master.get_password()
-        # if old_password != current_password:
-        #     messagebox.showerror("Fehler", "Das aktuelle Passwort ist inkorrekt.")
-        #     return
+        # Vérification si le mot de passe actuel est correct (exemple de mot de passe actuel : "password")
+        current_password = self.master.get_password()
+        if old_password != current_password:
+            messagebox.showerror("Fehler", "Das aktuelle Passwort ist inkorrekt.")
+            return
 
-        # workbook = openpyxl.load_workbook("Patienten_Zahnärzte_Kosten.xlsx")
-        # sheet = workbook["Stamm-Patienten"]
+        workbook = openpyxl.load_workbook("Patienten_Zahnärzte_Kosten.xlsx")
+        sheet = workbook["Stamm-Patienten"]
 
-        # # Recherche de l'index de la ligne correspondant à l'utilisateur
-        # # username = self.username_entry.get()
-        # username = self.username
-        # row_index = None
-        # for row in sheet.iter_rows(min_row=5, min_col=3, max_col=4):
-        #     if row[0].value == username:
-        #         row_index = row[0].row
-        #         break
-        # if row_index is not None:
-        # # Mise à jour du mot de passe dans la colonne appropriée
-        #     sheet.cell(row=row_index, column=4).value = new_password
-        #     workbook.save("Patienten_Zahnärzte_Kosten.xlsx")
-        #     messagebox.showinfo("Succès", "Le mot de passe a été changé avec succès.")
-        #     self.destroy()
-        # else:
-        #     messagebox.showerror("Erreur", "Utilisateur non trouvé dans la base de données.")
+        # Recherche de l'index de la ligne correspondant à l'utilisateur
+        # username = self.username_entry.get()
+        username = self.username
+        row_index = None
+        for row in sheet.iter_rows(min_row=5, min_col=3, max_col=4):
+            if row[0].value == username:
+                row_index = row[0].row
+                break
+        if row_index is not None:
+        # Mise à jour du mot de passe dans la colonne appropriée
+            sheet.cell(row=row_index, column=4).value = new_password
+            workbook.save("Patienten_Zahnärzte_Kosten.xlsx")
+            messagebox.showinfo("Succès", "Le mot de passe a été changé avec succès.")
+            self.destroy()
+        else:
+            messagebox.showerror("Erreur", "Utilisateur non trouvé dans la base de données.")
 
 
-        # messagebox.showinfo("Succès", "Le mot de passe a été changé avec succès.")
-        # self.destroy()  
+        messagebox.showinfo("Succès", "Le mot de passe a été changé avec succès.")
+        self.destroy()  
 
 
 # Hauptprogramm
