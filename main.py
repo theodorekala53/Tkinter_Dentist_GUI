@@ -20,7 +20,8 @@ from openpyxl import load_workbook
 
 #database für Ärzte (beim Login)
 db = pd.read_excel("Database/Patienten_Zahnärzte_Kosten.xlsx", sheet_name="Zahnärzte", header=None)
-db2 = pd.read_excel("Database/Patienten_Zahnärzte_Kosten.xlsx", sheet_name="Stamm-Patienten", header=None)
+db2 = pd.read_excel("Database/Patienten_Zahnärzte_Kosten.xlsx", sheet_name="Stamm-Patienten2", header=None)
+db3 = pd.read_excel("Database\Patienten_Zahnärzte_Kosten.xlsx", sheet_name="Stamm-Patienten2")
 
 
 class LoginWindow(tk.Tk):
@@ -69,9 +70,9 @@ class LoginWindow(tk.Tk):
         passwords = db.iloc[3:80, 2].values.tolist()
 
         #Patienten
-        full_names2 = db2.iloc[4:61, 2].values.tolist()
+        full_names2 = db3.iloc[1:61, 0].values.tolist()
         patient_names = [name.split()[-1] for name in full_names2]
-        patient_passwords = db2.iloc[4:61, 3].values.tolist()
+        patient_passwords = db3.iloc[1:61, 1].values.tolist()
 
         global username
         # global KrankenkasseArt
@@ -80,14 +81,32 @@ class LoginWindow(tk.Tk):
 
         if username in last_names and password in passwords:
             self.current_user = username
+            # Vous pouvez maintenant utiliser la variable krankenkasse_art comme nécessaire
             self.open_dentist_view(username)
         elif username == "a" and password == "a":
             self.open_dentist_view(username)
         elif username == "p" and password == "p":
             self.open_Patient_View(username)
         elif username in patient_names and password in patient_passwords:
-            self.current_user = username
-            self.open_Patient_View(username) 
+
+            # Create a list of possible formats for the username prefix
+            possible_prefixes = ["Herr", "Frau"]
+
+            # Variable to store the prefix
+            prefix = None
+
+            # Check each possible format
+            for possible_prefix in possible_prefixes:
+                formatted_username = f"{possible_prefix} {username}"
+                if db3['Patient'].str.contains(formatted_username, case=False).any():
+                    prefix = possible_prefix
+                    break
+
+            possible_usernames = ["Herr " + username, "Frau " + username]
+            matching_rows = db3['Patient'].str.contains('|'.join(possible_usernames), case=False)
+            # krankenkasse_art = db3.loc[db3.iloc[:, 0] == username, db3.columns[2]].values[0]
+            krankenkasse_art = db3.loc[matching_rows, 'Krankenkassenart'].values[0]
+            self.open_Patient_View(username, krankenkasse_art, prefix) 
         else:
             messagebox.showerror("Fehler", "Ungultige Anmeldeinformationen")
 
@@ -97,9 +116,9 @@ class LoginWindow(tk.Tk):
         dentist_view = DentistView(self, last_names)
         dentist_view.mainloop()
 
-    def open_Patient_View(self, patient_names):
+    def open_Patient_View(self, patient_names, krankenkasse_art, prefix):
         self.withdraw()
-        patient_View = PatientView(self, patient_names)
+        patient_View = PatientView(self, patient_names, krankenkasse_art, prefix)
         patient_View.mainloop()
 
     def open_new_window_Arzt_regist(self):
@@ -263,7 +282,7 @@ class LoginWindow(tk.Tk):
         # Vorhandenes Excel-Datei laden
         workbook = openpyxl.load_workbook('Database/Patienten_Zahnärzte_Kosten.xlsx')
         # Gewünschtes Tabellenblatt auswählen
-        sheet = workbook['Stamm-Patienten']
+        sheet = workbook['Stamm-Patienten2']
 
         # Überprüfen, ob der Name bereits in den Daten vorhanden ist
         if self.is_name_exists(name, sheet):
@@ -293,11 +312,11 @@ class LoginWindow(tk.Tk):
             while sheet.cell(row=row, column=3).value:
                 row += 1
             # Daten in die entsprechenden Spalten eintragen
-            sheet.cell(row=row, column=3).value = unique_name
-            sheet.cell(row=row, column=4).value = password
-            sheet.cell(row=row, column=5).value = krankenkassenart
-            sheet.cell(row=row, column=6).value = zahn_probl
-            sheet.cell(row=row, column=7).value = zahn_anzahl
+            sheet.cell(row=row, column=1).value = unique_name
+            sheet.cell(row=row, column=2).value = password
+            sheet.cell(row=row, column=3).value = krankenkassenart
+            sheet.cell(row=row, column=4).value = zahn_probl
+            sheet.cell(row=row, column=5).value = zahn_anzahl
 
         # Sauvegarder les modifications dans le fichier Excel
         workbook.save('Database/Patienten_Zahnärzte_Kosten.xlsx')
@@ -324,14 +343,17 @@ class LoginWindow(tk.Tk):
         change_password_window.title("Password ändern")
 
 class PatientView(tk.Toplevel):
-    def __init__(self, root, patient_names):
+    def __init__(self, root, patient_names, krankenkasse_art, prefix):
         super().__init__()
         self.geometry("1300x568")
         self.minsize(1300, 568)
         self.maxsize(1300, 568)
         self.title("Patientenansicht")
         self.config(background="#3B6064")
-
+        
+        self.patient_names = patient_names
+        self.krankenkasse_art = krankenkasse_art
+        self.prefix = prefix
 
         # Simulierte Daten - Zahnärzte und ihre Termine
         self.zahnaerzte = {
@@ -369,13 +391,13 @@ class PatientView(tk.Toplevel):
         lbl.place(rely=0, relx=0)
 
         # Info Frame
-        self.Name_Label = tk.Label(self.info_frame_unterbox ,text="Titel: ", font=("Arial", 11, "bold"), background="white")
+        self.Name_Label = tk.Label(self.info_frame_unterbox ,text="Titel: " + prefix, font=("Arial", 11, "bold"), background="white")
         self.Name_Label.place(rely=0.08, relx=0.11)
 
         self.Name_Label = tk.Label(self.info_frame_unterbox ,text="Name: " + patient_names, font=("Arial", 11, "bold"), background="white")
         self.Name_Label.place(rely=0.25, relx=0.11)
 
-        self.Krankenkass_Label = tk.Label(self.info_frame_unterbox ,text="Krankenkasse: ", font=("Arial", 11, "bold"), background="white")
+        self.Krankenkass_Label = tk.Label(self.info_frame_unterbox ,text="Krankenkasse: " + self.krankenkasse_art, font=("Arial", 11, "bold"), background="white")
         self.Krankenkass_Label.place(rely=0.45, relx=0.11)
 
         #Button
@@ -478,31 +500,43 @@ class PatientView(tk.Toplevel):
         auswahl_Frame3 = tk.LabelFrame(self, text="", height=237, background="white")
         auswahl_Frame3.place(rely=0.5395, relx=0.186)
 
-        columns=("Datum", "Uhrzeit", "Füllmaterial", "Zahnanzahl", "Kosten", "Arzt")
-        self.treeview_gebu_Termin = ttk.Treeview(auswahl_Frame3, columns= columns, height=10,  show='headings')
+        columns = ("Datum", "Uhrzeit", "Füllmaterial", "Zahnanzahl", "Arzt")
+        self.treeview_gebu_Termin = ttk.Treeview(auswahl_Frame3, columns=columns, height=10, show='headings')
         self.treeview_gebu_Termin.pack()
-
-        # Überschrift für den Treeview festlegen
-        self.treeview_gebu_Termin.heading("Datum", text="Datum", anchor='center')
-        self.treeview_gebu_Termin.heading("Uhrzeit", text="Uhrzeit", anchor='center')
-        self.treeview_gebu_Termin.heading("Füllmaterial", text="Füllmaterial", anchor='center')
-        self.treeview_gebu_Termin.heading("Zahnanzahl", text="Zahnanzahl", anchor='center')
-        self.treeview_gebu_Termin.heading("Kosten", text="Kosten", anchor='center')
-        self.treeview_gebu_Termin.heading("Arzt", text="Arzt", anchor='center')
-
-        self.treeview_gebu_Termin.column("Datum", width=198)
-        self.treeview_gebu_Termin.column("Uhrzeit", width=200)
-        self.treeview_gebu_Termin.column("Füllmaterial", width=200)
-        self.treeview_gebu_Termin.column("Zahnanzahl", width=150)
-        self.treeview_gebu_Termin.column("Kosten", width=150)
-        self.treeview_gebu_Termin.column("Arzt", width=150)
 
         # Überschriften für den Treeview festlegen
         for column in columns:
             self.treeview_gebu_Termin.heading(column, text=column, anchor='center')
-        # Spalten konfigurieren, um die Werte zu zentrieren
-        for column in columns:
-            self.treeview_gebu_Termin.column(column, anchor='center')
+            self.treeview_gebu_Termin.column(column, width=210, anchor='center')
+
+        self.update_treeview()
+
+
+    def update_treeview(self):
+
+        # Votre logique pour charger les données
+        if self.krankenkasse_art == "Privat":
+            excel_file_path = "Database\Patienten_Zahnärzte_Kosten.xlsx"
+            selected_columns = ["Datum", "Uhrzeit", "Füllmaterial", "Anzahl Zähne", "Arzt"]
+            df = pd.read_excel(excel_file_path, sheet_name="privat", usecols=selected_columns)
+
+            if df is not None:
+                # Insérer les données dans le ttk.Treeview
+                for index, row in df.iterrows():
+                    self.treeview_gebu_Termin.insert("", "end", values=tuple(row))
+        elif self.krankenkasse_art == "gesetzlich":
+            df = pd.read_excel("Database\Patienten_Zahnärzte_Kosten.xlsx", sheet_name="gesetzlich")
+        elif self.krankenkasse_art == "freiwillig gesetzlich":
+            df = pd.read_excel("Database\Patienten_Zahnärzte_Kosten.xlsx", sheet_name="freiwillig gesetzlich")
+
+            if df is not None:
+                # Insérer les données dans le ttk.Treeview
+                for index, row in df.iterrows():
+                    self.treeview_gebu_Termin.insert("", "end", values=tuple(row))
+
+        style = ttk.Style()
+        style.configure("treeview_gebu_Termin", rowheight=40)  # Augmenter la valeur de rowheight pour augmenter l'espace
+
 
         # self.update_image(self)  # Bildwechsel starten  
         self.update_time()  # Time Update
@@ -549,27 +583,50 @@ class PatientView(tk.Toplevel):
             self.save_appointment_to_excel(date, time)
 
     def save_appointment_to_excel(self, date, time):
+        # t = teeth, f = filling, sk = selected_krankenk, p = problematik,  k = Konste
         krankenkasse = self.krankenk_var.get()
-
-        excel_file_path = 'Patienten_Zahnärzte_Kosten.xlsx'
-
+        t = self.teeth_var.get()
+        f = self.fill_material_var.get()
+        sk = self.krankenk_var.get()
+        p = self.problematik_var.get()
+        excel_file_path = 'Database\Patienten_Zahnärzte_Kosten.xlsx'
+        name = self.patient_names
         try:
             # Charger le classeur Excel existant
             wb = load_workbook(excel_file_path)
 
             # Sélectionner la feuille 'privat' (créer si elle n'existe pas)
-            if krankenkasse == "Privat":
-                if 'Privat' not in wb.sheetnames:
-                    wb.create_sheet('Privat')
+            if krankenkasse == "privat":
+                if 'privat' not in wb.sheetnames:
+                    wb.create_sheet('privat')
+                ws = wb['privat']
+                # Ajouter une nouvelle ligne avec les détails du rendez-vous
+                ws.append([name, t, f, sk, p, date, time, self.dentist_var.get()])
 
-            ws = wb['Privat']
-            
-            # Ajouter une nouvelle ligne avec les détails du rendez-vous
-            ws.append([self.dentist_var.get(), date, time])
+                # Enregistrer les modifications
+                wb.save(excel_file_path)
+                print(f"Rendez-vous enregistré dans {excel_file_path}, feuille 'Privat'")
+            elif krankenkasse == "gesetzlich":
+                if 'gesetzlich' not in wb.sheetnames:
+                    wb.create_sheet('gesetzlich')
+                ws = wb['gesetzlich']
+                # Ajouter une nouvelle ligne avec les détails du rendez-vous
+                ws.append([name, t, f, sk, p, date, time, self.dentist_var.get()])
 
-            # Enregistrer les modifications
-            wb.save(excel_file_path)
-            print(f"Rendez-vous enregistré dans {excel_file_path}, feuille 'Privat'")
+                # Enregistrer les modifications
+                wb.save(excel_file_path)
+                print(f"Rendez-vous enregistré dans {excel_file_path}, feuille 'gesetzlich'")
+            else:
+                if 'freiwillig gesetzlich' not in wb.sheetnames:
+                    wb.create_sheet('freiwillig gesetzlich')
+                ws = wb['freiwillig gesetzlich']
+                # Ajouter une nouvelle ligne avec les détails du rendez-vous
+                ws.append([name, t, f, sk, p, date, time, self.dentist_var.get()])
+
+                # Enregistrer les modifications
+                wb.save(excel_file_path)
+                print(f"Rendez-vous enregistré dans {excel_file_path}, feuille 'freiwillig gesetzlich'")
+                
         except FileNotFoundError:
             print("Le fichier Excel n'a pas été trouvé.")
 
@@ -589,35 +646,6 @@ class PatientView(tk.Toplevel):
         last_names2 = username
 
         # ## TODO: wenn Teeth == 0 or wenn filling == 0 or ....... messagebox.showerror("Fehler", "Anzahl teeth eingeben")
-
-        # # Arbeitsblatt mit openpyxl öffnen
-        # workbook = openpyxl.load_workbook('Database\Patienten_Zahnärzte_Kosten.xlsx')
-
-        # if selected_krankenk == "privat":
-        #     sheet = workbook['privat']
-        # elif selected_krankenk == "gesetzlich":
-        #     sheet = workbook['gesetzlich']
-        # else:
-        #     sheet = workbook['freiwillig gesetzlich']
-
-        # # Überschriften
-        # sheet['A1'] = 'Patient'
-        # sheet['B1'] = 'Anzahl zu behandelnder Zähne'
-        # sheet['C1'] = 'Filling Material'
-        # sheet['D1'] = 'Krankenkasse'
-        # sheet['E1'] = 'Problematik'
-
-        # # Werte
-        # row = sheet.max_row + 1  # Nächste verfügbare Zeile
-        # sheet[f'A{row}'] = last_names2
-        # sheet[f'B{row}'] = teeth
-        # sheet[f'C{row}'] = filling
-        # sheet[f'D{row}'] = selected_krankenk
-        # sheet[f'E{row}'] = problematik
-
-        # # Datei speichern
-        # workbook.save('Database\Patienten_Zahnärzte_Kosten.xlsx')
-
         # Correspondance des options de combobox avec les pourcentages
         if problematik == "Karies klein":
             self.anzeige_Zeit_Label.config(text="0.25")
@@ -1117,9 +1145,11 @@ class ChangePasswordWindow(tk.Toplevel):
             for row in sheet.iter_rows(min_row=2, values_only=True):  # Commencer à la ligne 2 (en supposant que la première ligne contient les en-têtes)
                 if row[1] == self.current_user:  # Vous devez ajuster ceci en fonction de l'emplacement de la colonne du nom d'utilisateur
                     user_row = row
+                    print(user_row)
                     break
                 
             if user_row:
+                print(user_row)
                 old_password = user_row[2]  # Vous devez ajuster ceci en fonction de l'emplacement de la colonne du mot de passe
                 if old_password == old_password:
                     # Mettez à jour le mot de passe
@@ -1133,38 +1163,6 @@ class ChangePasswordWindow(tk.Toplevel):
                 messagebox.showerror("Fehler", "Benutzer nicht gefunden")
         except Exception as e:
             messagebox.showerror("Error", f"Une erreur s'est produite : {str(e)}")
-
-        # workbook = openpyxl.load_workbook("Patienten_Zahnärzte_Kosten.xlsx")
-        # sheet = workbook["Stamm-Patienten"]
-
-        # #Patienten
-        # full_names3 = db2.iloc[4:61, 2].values.tolist()
-        # patient_names = [name.split()[-1] for name in full_names3]
-        # patient_passwords = db2.iloc[4:61, 3].values.tolist()
-        
-        # name = self.login_name
-        # for name in patient_names:
-        #      if name in patient_names:
-        #           print(f"{name}")
-
-# ----------
-        # # Recherche de l'index de la ligne correspondant à l'utilisateur
-        # # username = self.username_entry.get()
-        # username = self.username
-        # row_index = None
-        # for row in sheet.iter_rows(min_row=5, min_col=3, max_col=4):
-        #     if row[0].value == username:
-        #         row_index = row[0].row
-        #         break
-        # if row_index is not None:
-        # # Mise à jour du mot de passe dans la colonne appropriée
-        #     sheet.cell(row=row_index, column=4).value = new_password
-        #     workbook.save("Patienten_Zahnärzte_Kosten.xlsx")
-        #     messagebox.showinfo("Succès", "Le mot de passe a été changé avec succès.")
-        #     self.destroy()
-        # else:
-        #     messagebox.showerror("Erreur", "Utilisateur non trouvé dans la base de données.")
-
 
         messagebox.showinfo("Succès", "Le mot de passe a été changé avec succès.")
         self.destroy()  
