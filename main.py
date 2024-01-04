@@ -65,9 +65,9 @@ class LoginWindow(tk.Tk):
         password = None
 
         # Ärzten Database
-        full_names = db.iloc[3:80, 1].values.tolist()
+        full_names = db.iloc[1:80, 0].values.tolist()
         last_names = [name.split()[-1] for name in full_names]
-        passwords = db.iloc[3:80, 2].values.tolist()
+        passwords = db.iloc[1:80, 1].values.tolist()
 
         #Patienten
         full_names2 = db3.iloc[1:61, 0].values.tolist()
@@ -339,7 +339,7 @@ class LoginWindow(tk.Tk):
         self.destroy()
 
     def open_change_password_window(self):
-        change_password_window = ChangePasswordWindow(self)
+        change_password_window = ChangePassworWindow(self)
         change_password_window.title("Password ändern")
 
 class PatientView(tk.Toplevel):
@@ -468,7 +468,6 @@ class PatientView(tk.Toplevel):
         self.combobox2.bind("<<ComboboxSelected>>", self.update_dentist_options)  # Bind the selection event
         self.combobox2.current(0)  # Set the default selection
         self.combobox2.place(rely=0.05, relx=0.56)
-
         # Dentist Selection Label
         self.dentist_label = tk.Label(self, text="Behandelter Zahnarzt:", background="white", font=("Arial", 10, "bold"))
         self.dentist_label.place(rely=0.1, relx=0.478)
@@ -487,7 +486,7 @@ class PatientView(tk.Toplevel):
 
         self.buttonBerechnen = tk.Button(auswahl_Frame1, text="Kosten Berechnen",background="#3B6064", fg="white", command=self.calculate_cost, font=("Arial", 10, "bold"), padx=5, pady=10)
         self.buttonBerechnen.place(rely=0.8, relx=0.399)
-        self.buttonBerechnen = tk.Button(auswahl_Frame1, text="Termin Buchen",background="#3B6064", fg="white", font=("Arial", 10, "bold"), padx=10, pady=10)
+        self.buttonBerechnen = tk.Button(auswahl_Frame1, text="Termin Buchen",background="#3B6064", fg="white", font=("Arial", 10, "bold"), padx=10, pady=10, command=self.termin_bestätigung)
         self.buttonBerechnen.place(rely=0.8, relx=0.5516)
 
         self.terminDescr = tk.Frame(auswahl_Frame1, background="white", width=266, height=280)
@@ -510,7 +509,6 @@ class PatientView(tk.Toplevel):
             self.treeview_gebu_Termin.column(column, width=210, anchor='center')
 
         self.update_treeview()
-
 
     def update_treeview(self):
 
@@ -566,21 +564,18 @@ class PatientView(tk.Toplevel):
             treeview.bind("<Double-1>", lambda event: self.select_appointment(treeview))
 
     def parse_appointment(self, appointment):
-        date, time = appointment.split()
-        return date, time
+        self.date, self.time = appointment.split()
+        return self.date, self.time
 
     def select_appointment(self, treeview):
         selection = treeview.selection()
 
         if selection:
             item = treeview.item(selection)
-            date, time = item['values']
-            # appointment_details = f"Rendez-vous sélectionné :{date} à {time} pour le Zahnarzt {self.zahnarzt_var.get()}"
-            # print(appointment_details)
-            # self.selection_rendezvous = appointment_details
+            self.date, self.time = item['values']
 
             # Stocker le rendez-vous dans la feuille 'privat' du fichier Excel
-            self.save_appointment_to_excel(date, time)
+            self.save_appointment_to_excel(self.date, self.time)
 
     def save_appointment_to_excel(self, date, time):
         # t = teeth, f = filling, sk = selected_krankenk, p = problematik,  k = Konste
@@ -591,6 +586,7 @@ class PatientView(tk.Toplevel):
         p = self.problematik_var.get()
         excel_file_path = 'Database\Patienten_Zahnärzte_Kosten.xlsx'
         name = self.patient_names
+        self.dentist = self.dentist_var.get()
         try:
             # Charger le classeur Excel existant
             wb = load_workbook(excel_file_path)
@@ -600,38 +596,53 @@ class PatientView(tk.Toplevel):
                 if 'privat' not in wb.sheetnames:
                     wb.create_sheet('privat')
                 ws = wb['privat']
-                # Ajouter une nouvelle ligne avec les détails du rendez-vous
-                ws.append([name, t, f, sk, p, date, time, self.dentist_var.get()])
+                # Füge eine neue Zeile mit den Termindetails hinzu
+                for row in ws.iter_rows(min_row=2, max_col=8, max_row=ws.max_row):
+                    if row[5].value == date and row[6].value == time:
+                        messagebox.showinfo("Termin existiert", f"Der Termin um {time} am {date} existiert bereits.")
+                        return
+                    else:
+                        ws.append([name, t, f, sk, p, date, time, self.dentist_var.get()])
 
-                # Enregistrer les modifications
+                # speichere die Änderungen
                 wb.save(excel_file_path)
-                print(f"Rendez-vous enregistré dans {excel_file_path}, feuille 'Privat'")
+                print(f"Termin wurde in {excel_file_path} gespeichert, Sheet 'Privat'")
             elif krankenkasse == "gesetzlich":
                 if 'gesetzlich' not in wb.sheetnames:
                     wb.create_sheet('gesetzlich')
                 ws = wb['gesetzlich']
-                # Ajouter une nouvelle ligne avec les détails du rendez-vous
-                ws.append([name, t, f, sk, p, date, time, self.dentist_var.get()])
+                 # Füge eine neue Zeile mit den Termindetails hinzu
+                for row in ws.iter_rows(min_row=2, max_col=8, max_row=ws.max_row):
+                    if row[5].value == date and row[6].value == time: # and row[7] == self.dentist
+                        messagebox.showinfo("Termin existiert", f"Der Termin um {time} am {date} existiert bereits.")
+                        return
+                    else: 
+                        ws.append([name, t, f, sk, p, date, time, self.dentist_var.get()])
 
-                # Enregistrer les modifications
+                # speichere die Änderungen
                 wb.save(excel_file_path)
-                print(f"Rendez-vous enregistré dans {excel_file_path}, feuille 'gesetzlich'")
+                print(f"Termin wurde in {excel_file_path} gespeichert, Sheet 'gesetzlich'")
             else:
                 if 'freiwillig gesetzlich' not in wb.sheetnames:
                     wb.create_sheet('freiwillig gesetzlich')
                 ws = wb['freiwillig gesetzlich']
-                # Ajouter une nouvelle ligne avec les détails du rendez-vous
-                ws.append([name, t, f, sk, p, date, time, self.dentist_var.get()])
+                # Füge eine neue Zeile mit den Termindetails hinzu
+                for row in ws.iter_rows(min_row=2, max_col=8, max_row=ws.max_row):
+                    if row[5].value == date and row[6].value == time:
+                        messagebox.showinfo("Termin existiert", f"Der Termin um {time} am {date} existiert bereits.")
+                        return
+                    else:
+                        ws.append([name, t, f, sk, p, date, time, self.dentist_var.get()])
 
-                # Enregistrer les modifications
+                # Änderungen speichern
                 wb.save(excel_file_path)
-                print(f"Rendez-vous enregistré dans {excel_file_path}, feuille 'freiwillig gesetzlich'")
+                print(f"Termin wurde in {excel_file_path} gespeichert, Sheet 'freiwillig gesetzlich'")
                 
         except FileNotFoundError:
-            print("Le fichier Excel n'a pas été trouvé.")
+            print("File wurde nicht gefunden.")
 
     def open_change_password_window(self):
-        change_password_window = ChangePasswordWindow(self.root, self.current_user)
+        change_password_window = ChangePassworWindow(self.root, self.current_user)
         change_password_window.title("Passwort ändern")
 
     def open_Kalender_view(self):
@@ -978,7 +989,7 @@ class DentistView(tk.Toplevel):
         if df is not None:
             font = Font(size=11, weight="bold")
             for index, row in df.iterrows():
-                self.treeview_gebu_Termin.insert("", "end", values=(row[0], row[4], row[2], row[1]), tags="custom_font")
+                self.treeview_gebu_Termin.insert("", "end", values=(row[0], row[4], row[2], row[1], row[5], row[6]), tags="custom_font")
         
             self.treeview_gebu_Termin.tag_configure("custom_font", font=font)
         style = ttk.Style()
@@ -1008,37 +1019,40 @@ class DentistView(tk.Toplevel):
         self.optionFrame1 = tk.Frame(self, width=351, height=256, bg="#3B6064", highlightbackground="#5B949A", highlightthickness=0.5)
         self.optionFrame1.place(x=765, y=278)
         #----------------------------
-        self.logout_button = tk.Button(self.optionFrame1, text="Krankenkasse\nändern", width=18, height=2, font=("Arial", 9, "bold"))
-        self.logout_button.place(x=18, y=25)
-        self.logout_button = tk.Button(self.optionFrame1, text="Behandlungszeit\nändern", width=18, height=2, font=("Arial", 9, "bold"))
-        self.logout_button.place(x=197, y=25)
-        self.logout_button = tk.Button(self.optionFrame1, text="Einstellung", width=18, height=2, font=("Arial", 9, "bold"))
-        self.logout_button.place(x=18, y=83.5)
-        self.logout_button = tk.Button(self.optionFrame1, text="Einstellung", width=18, height=2, font=("Arial", 9, "bold"))
-        self.logout_button.place(x=197, y=83.5)
-        self.logout_button = tk.Button(self.optionFrame1, text="Einstellung", width=18, height=2, font=("Arial", 9, "bold"))
-        self.logout_button.place(x=18, y=140)
-        self.logout_button = tk.Button(self.optionFrame1, text="Einstellung", width=18, height=2, font=("Arial", 9, "bold"))
-        self.logout_button.place(x=18, y=140)
-        self.logout_button = tk.Button(self.optionFrame1, text="Einstellung", width=18, height=2, font=("Arial", 9, "bold"))
-        self.logout_button.place(x=197, y=140)
-        self.logout_button = tk.Button(self.optionFrame1, text="Einstellung", width=18, height=2, font=("Arial", 9, "bold"))
+        # self.logout_button = tk.Button(self.optionFrame1, text="Krankenkasse\nändern", width=18, height=2, font=("Arial", 9, "bold"))
+        # self.logout_button.place(x=18, y=25)
+        self.image_frame = tk.Frame(self.optionFrame1, width=317, height=162)
+        self.image_frame.place(rely=0.06, relx=0.0480)
+        # self.logout_button = tk.Button(self.optionFrame1, text=" ", width=44, height=10, font=("Arial", 9, "bold"))
+        # self.logout_button.place(x=18, y=15)
+        self.logout_button = tk.Button(self.optionFrame1, text="Behandlungszeit\nändern", width=20, height=2, font=("Arial", 9, "bold"), command=self.set_behandlungzeit)
         self.logout_button.place(x=18, y=200)
-        self.logout_button = tk.Button(self.optionFrame1, text="Einstellung", width=18, height=2, font=("Arial", 9, "bold"))
-        self.logout_button.place(x=197, y=200)
+        self.logout_button = tk.Button(self.optionFrame1, text="Krankenkasse\nändern", width=20, height=2, font=("Arial", 9, "bold"), command=self.set_krankenkasse)
+        self.logout_button.place(x=187, y=200)
+
+        # Info Frame
+        self.Name_Label = tk.Label(self.image_frame ,text="Titel: xxxx", font=("Arial", 11, "bold"))
+        self.Name_Label.place(rely=0.08, relx=0.03)
+        self.Name_Label = tk.Label(self.image_frame ,text="Name: "+ last_names, font=("Arial", 11, "bold"))
+        self.Name_Label.place(rely=0.30, relx=0.03)
+        self.Krankenkass_Label = tk.Label(self.image_frame ,text="Krankenkasse: xxxx", font=("Arial", 11, "bold"))
+        self.Krankenkass_Label.place(rely=0.53, relx=0.03)
+
+        # self.arzt_name_label = tk.Label(self.)
+
         #----------------------------
         #----------------------------
         self.optionFrame2 = tk.Frame(self, width=170, height=256, bg="#3B6064", highlightbackground="#5B949A", highlightthickness=0.5)
         self.optionFrame2.place(x=1126, y=278)
         #----------------------------
-        self.logout_button = tk.Button(self.optionFrame2, text="Passwort ändern", width=18, height=2, font=("Arial", 9, "bold"))
-        self.logout_button.place(x=18, y=25)
+        self.logout_button = tk.Button(self.optionFrame2, text="Passwort ändern", width=18, height=2, font=("Arial", 9, "bold"), command=self.open_change_password_D_window)
+        self.logout_button.place(x=18, y=16)
         #----------------------------
-        self.Hintergrung_button = tk.Button(self.optionFrame2, text="Hintergrung", width=18, height=2, font=("Arial", 9, "bold"))
-        self.Hintergrung_button.place(x=18, y=83.2)
+        self.Hintergrung_button = tk.Button(self.optionFrame2, text="Hintergrung", width=18, height=2, font=("Arial", 9, "bold"), command=self.set_hintergrund)
+        self.Hintergrung_button.place(x=18, y=74.2)
         #----------------------------
-        self.Sprache_button = tk.Button(self.optionFrame2, text="Englisch/Deutsch", width=18, height=2, font=("Arial", 9, "bold"))
-        self.Sprache_button.place(x=18, y=140)
+        self.Sprache_button = tk.Button(self.optionFrame2, text="Englisch/Deutsch", width=18, height=2, font=("Arial", 9, "bold"), command=self.set_language)
+        self.Sprache_button.place(x=18, y=135)
         #----------------------------
         self.logout_button = tk.Button(self.optionFrame2, text="Auslogen", command=self.logout, width=16, height=2, background="#E36370", fg="white", font=("Arial", 10, "bold"))
         self.logout_button.place(x=18, y=200)
@@ -1085,9 +1099,101 @@ class DentistView(tk.Toplevel):
         self.master.deiconify()
         self.master.username_entry.delete(0, tk.END)
         self.master.password_entry.delete(0, tk.END)
-  
-class ChangePasswordWindow(tk.Toplevel):
+
+    def open_change_password_D_window(self):
+        change_password_window = ChangePasswordDenWindow(self.master, self.last_names2)
+        change_password_window.title("Passwort ändern")
+
+    def set_hintergrund(self):
+        print("Hintergrund ist noch nicht fertig")
+    def set_language(self):
+        print("language ist noch nicht fertig")
+    def set_krankenkasse(self):
+        print("krankenkasse ist noch nicht fertig")
+    def set_behandlungzeit(self):
+        print("zeit ist noch nicht fertig")
+
+class ChangePassworWindow(tk.Toplevel):
     def __init__(self, parent, current_user):#
+        super().__init__()#
+        self.parent = parent #
+        self.title("Passwort Änderung")
+        self.geometry("500x400")
+        self.config(background="#5B949A")
+        self.resizable(False, False)
+        self.current_user = current_user # Récupérer le nom d'utilisateur actuel
+
+        self.old_password_label = tk.Label(self, text="Alte Passwort:", background="#5B949A", font=("Arial", 10, "bold"))
+        self.old_password_label.place(rely=0.15, relx=0.18)
+        self.old_password_entry = tk.Entry(self, show="*")
+        self.old_password_entry.place(rely=0.15, relx=0.46)
+
+        self.new_password_label = tk.Label(self, text="Neue Passwort:", background="#5B949A", font=("Arial", 10, "bold"))
+        self.new_password_label.place(rely=0.25, relx=0.18)
+        self.new_password_entry = tk.Entry(self, show="*")
+        self.new_password_entry.place(rely=0.25, relx=0.46)
+
+        self.confirm_password_label = tk.Label(self, text="Pass Bestätigen:", background="#5B949A", font=("Arial", 10, "bold"))
+        self.confirm_password_label.place(rely=0.37, relx=0.18)
+        self.confirm_password_entry = tk.Entry(self, show="*")
+        self.confirm_password_entry.place(rely=0.37, relx=0.46)
+
+        self.change_button = tk.Button(self, text="Bestätigen", background="white", command=self.change_password, padx= 40, pady=10)
+        self.change_button.place(rely=0.55, relx=0.35)
+
+    def change_password(self):
+        old_password = self.old_password_entry.get()
+        confirm_password = self.confirm_password_entry.get()
+        new_password = self.new_password_entry.get()
+
+        # Vérification si les champs de mot de passe sont vides
+        if not old_password or not new_password or not confirm_password:
+            messagebox.showerror("Fehler", "Bitte Felder ausfüllen!!")
+            return
+
+        # Vérification si le nouveau mot de passe correspond à la confirmation
+        if new_password != confirm_password:
+            messagebox.showerror("Fehler", "Das neue Passwort stimmt nicht mit der Bestätigung überein.")
+            return
+
+        # Lire le fichier Excel pour vérifier la connexion
+        try:
+            file_path = "Database/Patienten_Zahnärzte_Kosten.xlsx"
+            workbook = openpyxl.load_workbook(file_path)
+            sheet_name = "Stamm-Patienten2"
+            sheet = workbook[sheet_name]
+
+            # Créer une liste pour stocker les données mises à jour
+            updated_data = []
+
+            # Trouver la ligne correspondant au patient actuel
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                if self.current_user.lower() in str(row[0]).lower():  # Vérifiez le nom du patient
+                    stored_password = row[1]  # Récupérez le mot de passe stocké
+
+                    if old_password == stored_password:
+                        # Mettre à jour le mot de passe dans la liste
+                        updated_data.append((row[0], new_password, *row[2:]))
+                        messagebox.showinfo("Erfolg", "Password wurde aktualisiert")
+                        self.destroy()
+                        break
+                    else:
+                        messagebox.showerror("Fehler", "Altes Passwort stimmt nicht überein")
+                        return
+                else:
+                    updated_data.append(row)
+
+            # Écrire les données mises à jour dans la feuille Excel
+            for row_idx, row_data in enumerate(updated_data, start=2):
+                for col_idx, value in enumerate(row_data, start=1):
+                    sheet.cell(row=row_idx, column=col_idx, value=value)
+
+            workbook.save(file_path)
+        except Exception as e:
+            print({str(e)})
+
+class ChangePasswordDenWindow(tk.Toplevel):
+    def __init__(self, parent, current_user):
         super().__init__()#
         self.parent = parent #
         self.title("Passwort Änderung")
@@ -1132,43 +1238,42 @@ class ChangePasswordWindow(tk.Toplevel):
 
         # Lire le fichier Excel pour vérifier la connexion
         try:
-            # Charger le fichier Excel complet
             file_path = "Database/Patienten_Zahnärzte_Kosten.xlsx"
             workbook = openpyxl.load_workbook(file_path)
-
-            # Sélectionnez la feuille que vous souhaitez mettre à jour
-            sheet_name = "Stamm-Patienten2"
+            sheet_name = "Zahnärzte"  # Assurez-vous de la bonne feuille
             sheet = workbook[sheet_name]
 
-            # Trouvez la ligne correspondant à l'utilisateur actuel
-            user_row = None
-            for row in sheet.iter_rows(min_row=2, values_only=True):  # Commencer à la ligne 2 (en supposant que la première ligne contient les en-têtes)
-                if row[1] == self.current_user:  # Vous devez ajuster ceci en fonction de l'emplacement de la colonne du nom d'utilisateur
-                    user_row = row
-                    print(user_row)
-                    break
-                
-            if user_row:
-                print(user_row)
-                old_password = user_row[2]  # Vous devez ajuster ceci en fonction de l'emplacement de la colonne du mot de passe
-                if old_password == old_password:
-                    # Mettez à jour le mot de passe
-                    user_row[2] = new_password  # Vous devez ajuster ceci en fonction de l'emplacement de la colonne du mot de passe
-                    # Sauvegardez les modifications dans le fichier Excel
-                    workbook.save(file_path)
-                    messagebox.showinfo("Erfolg", "Password wurde aktualisiert")
+            # Créer une liste pour stocker les données mises à jour
+            updated_data = []
+
+            # Trouver la ligne correspondant au patient actuel
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                if self.current_user.lower() in str(row[0]).lower():  # Vérifiez le nom du patient
+                    stored_password = row[1]  # Récupérez le mot de passe stocké
+
+                    if old_password == stored_password:
+                        # Mettre à jour le mot de passe dans la liste
+                        updated_data.append((row[0], new_password, *row[2:]))
+                        messagebox.showinfo("Erfolg", "Password wurde aktualisiert")
+                        self.destroy()
+                        break
+                    else:
+                        messagebox.showerror("Fehler", "Altes Passwort stimmt nicht überein")
+                        
+                        return
                 else:
-                    messagebox.showerror("Fehler", "Altes Passwort stimmt nicht überein")
-            else:
-                messagebox.showerror("Fehler", "Benutzer nicht gefunden")
+                    updated_data.append(row)
+
+            # Écrire les données mises à jour dans la feuille Excel
+            for row_idx, row_data in enumerate(updated_data, start=2):
+                for col_idx, value in enumerate(row_data, start=1):
+                    sheet.cell(row=row_idx, column=col_idx, value=value)
+
+            workbook.save(file_path)
         except Exception as e:
-            messagebox.showerror("Error", f"Une erreur s'est produite : {str(e)}")
+            # messagebox.showerror("Error", f"Une erreur s'est produite : {str(e)}")
+            print({str(e)})
 
-        messagebox.showinfo("Succès", "Le mot de passe a été changé avec succès.")
-        self.destroy()  
-
-# instance_name_from_log = LoginWindow()
-# name_from_login = instance_name_from_log.username_entry
 
 # Hauptprogramm
 if __name__ == "__main__":
