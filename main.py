@@ -1,6 +1,5 @@
 ##############################################
 #  Autor: Theodore Noubissi Kala
-#
 #  Aufgabe: Grafische Oberfläsche für Zahnartz
 ##############################################
 
@@ -77,13 +76,11 @@ class LoginWindow(tk.Tk):
         patient_passwords = db3.iloc[1:61, 1].values.tolist()
 
         global username
-        # global KrankenkasseArt
         username = self.username_entry.get()
         password = self.password_entry.get()
 
         if username in last_names and password in passwords:
             self.current_user = username
-            # Vous pouvez maintenant utiliser la variable krankenkasse_art comme nécessaire
             self.open_dentist_view(username)
         elif username == "a" and password == "a":
             self.open_dentist_view(username)
@@ -138,7 +135,6 @@ class LoginWindow(tk.Tk):
         self.dentist_var = tk.StringVar()
         self.teeth_var = tk.StringVar()
   
-
         name_Label = tk.Label(new_window, text="Name:", font=("Arial", 10, "bold"), fg="white", background="#2A324B")
         name_Label.place(rely=0.2, relx=0.09)
         name_Label_Entry = tk.Entry(new_window, textvariable=self.name_var)
@@ -157,7 +153,6 @@ class LoginWindow(tk.Tk):
         self.combobox2.current(0)  # Set the default selection
         self.combobox2.place(rely=0.4, relx=0.29)
 
-        # register_button = tk.Button(new_window, text="Register", font=("Arial", 11, "bold"), command=self.save_data)
         self.register_button = tk.Button(new_window, text="Registrieren", font=("Arial", 11, "bold"), command=self.save_data)
         self.register_button.place(rely=0.55, relx=0.19)
 
@@ -167,12 +162,8 @@ class LoginWindow(tk.Tk):
         name_Label_Entry.delete(0, tk.END)
         passwort_Label_Entry.delete(0, tk.END)
         self.combobox2.delete(0, tk.END)
-    	
-        # new_window.protocol("WM_DELETE_WINDOW", self.on_new_window_close)
     
     def open_new_window_Patient_regist(self):
-        # self.withdraw()  
-
         new_window = tk.Toplevel()
         new_window.title("Patient Registrierung")
         new_window.geometry("700x450")
@@ -233,32 +224,25 @@ class LoginWindow(tk.Tk):
         new_window.protocol("WM_DELETE_WINDOW", self.on_new_window_close)
 
     def save_data(self):
-        # Récupérer les données saisies
+        # Daten rausholen 
         name = self.name_var.get()
         password = self.password_var.get()
         krankenkassenart = self.krankenk_var.get()
 
-        # Charger le fichier Excel existant
         workbook = openpyxl.load_workbook('Database/Patienten_Zahnärzte_Kosten.xlsx')
-        # Sélectionner la feuille de calcul spécifiée
         sheet = workbook['Zahnärzte']
-        # Trouver la première ligne vide à partir de la ligne 4 (lignes 1 à 3 sont des en-têtes)
         row = 3
         while sheet.cell(row=row, column=2).value:
             row += 1
-        # Enregistrer les données dans les colonnes spécifiées
-        sheet.cell(row=row, column=2).value = name
-        sheet.cell(row=row, column=3).value = password
-        sheet.cell(row=row, column=4).value = krankenkassenart
+        sheet.cell(row=row, column=1).value = name
+        sheet.cell(row=row, column=2).value = password
+        sheet.cell(row=row, column=3).value = krankenkassenart
 
-        # Sauvegarder les modifications dans le fichier Excel
         workbook.save('Database/Patienten_Zahnärzte_Kosten.xlsx')
 
-        # Afficher un message de succès
         tk.messagebox.showinfo("Success", "Registrierung Erfolgreich")
 
     def is_name_exists(self, name, sheet):
-        # Vérifie si le nom existe déjà dans la colonne 3 (colonne des noms)
         for row in sheet.iter_rows(min_row=4, min_col=3, max_col=3):
             if row[0].value == name:
                 return True
@@ -320,10 +304,8 @@ class LoginWindow(tk.Tk):
             sheet.cell(row=row, column=4).value = zahn_probl
             sheet.cell(row=row, column=5).value = zahn_anzahl
 
-        # Sauvegarder les modifications dans le fichier Excel
         workbook.save('Database/Patienten_Zahnärzte_Kosten.xlsx')
 
-        # Afficher un message de succès
         tk.messagebox.showinfo("Success", "Registrierung Erfolgreich")
     
     def logout(self):
@@ -337,7 +319,7 @@ class LoginWindow(tk.Tk):
         return self.password_entry.get()
 
     def on_new_window_close(self):
-        self.deiconify()  # Réaffiche la première fenêtre lorsque la deuxième fenêtre est fermée
+        self.deiconify() 
         self.destroy()
 
     def open_change_password_window(self):
@@ -367,7 +349,7 @@ class PatientView(tk.Toplevel):
         }
 
 
-        self.root = root  # Conservez une référence à la fenêtre principale
+        self.root = root  # Hauptfenster
         self.current_user = username
 
         # Hauptframe für das Layout der Patientenansicht
@@ -520,18 +502,16 @@ class PatientView(tk.Toplevel):
     
     def viewAktualisieren(self):
         self.update_treeview()
-
-    
+   
     def update_treeview(self):
 
-        # Votre logique pour charger les données
         if self.krankenkasse_art == "Privat":
             excel_file_path = "Database\Patienten_Zahnärzte_Kosten.xlsx"
             selected_columns = ["Datum", "Uhrzeit", "Füllmaterial", "Anzahl Zähne", "Arzt"]
             df = pd.read_excel(excel_file_path, sheet_name="privat", usecols=selected_columns)
 
             if df is not None:
-                # Insérer les données dans le ttk.Treeview
+                # Daten in ttk.Treeview hinzufügen
                 for index, row in df.iterrows():
                     self.treeview_gebu_Termin.insert("", "end", values=tuple(row))
         elif self.krankenkasse_art == "gesetzlich":
@@ -552,16 +532,15 @@ class PatientView(tk.Toplevel):
         # self.update_image(self)  # Bildwechsel starten  
         self.update_time()  # Time Update
 
-        # Variable pour stocker le rendez-vous sélectionné
         self.selection_rendezvous = None
 
     def open_image(self):
-        file_path = filedialog.askopenfilename()  # Ouvre la boîte de dialogue pour sélectionner un fichier
+        file_path = filedialog.askopenfilename() 
         if file_path:
             image = Image.open(file_path)
             photo = ImageTk.PhotoImage(image)
             self.label_img.config(image=photo)
-            self.label_img.image = photo  # Garde une référence à l'image pour éviter sa suppression
+            self.label_img.image = photo 
 
     def show_appointments(self):
         selected_dentist = self.dentist_var.get()
@@ -595,7 +574,7 @@ class PatientView(tk.Toplevel):
             item = treeview.item(selection)
             self.date, self.time = item['values']
 
-            # Stocker le rendez-vous dans la feuille 'privat' du fichier Excel
+            # STermin speichern
             self.save_appointment_to_excel(self.date, self.time)
 
     def save_appointment_to_excel(self, date, time):
@@ -609,10 +588,10 @@ class PatientView(tk.Toplevel):
         name = self.patient_names
         self.dentist = self.dentist_var.get()
         try:
-            # Charger le classeur Excel existant
+            # workbook hochladen
             wb = load_workbook(excel_file_path)
 
-            # Sélectionner la feuille 'privat' (créer si elle n'existe pas)
+            # Sheet 'privat' auswählen
             if krankenkasse == "privat":
                 if 'privat' not in wb.sheetnames:
                     wb.create_sheet('privat')
@@ -678,8 +657,6 @@ class PatientView(tk.Toplevel):
         problematik = self.problematik_var.get()
         last_names2 = username
 
-        # ## TODO: wenn Teeth == 0 or wenn filling == 0 or ....... messagebox.showerror("Fehler", "Anzahl teeth eingeben")
-        # Correspondance des options de combobox avec les pourcentages
         if problematik == "Karies klein":
             self.anzeige_Zeit_Label.config(text="0.25")
             if filling == "normal":
@@ -895,7 +872,6 @@ class PatientView(tk.Toplevel):
         self.dentist_var.set("")  # Clear the current selection
         self.dentist_combobox['values'] = allowed_dentists  # Update the ComboBox widget
 
-
     def updateDescription(self, event):
          selected_Artz = self.dentist_combobox.get()
          if selected_Artz == "Herr Dr. Huber":
@@ -1014,6 +990,7 @@ class DentistView(tk.Toplevel):
         self.config(background="#3B6064")
         self.last_names2 = last_names
 
+        
         # Zielgröße für das redimensionierte Bild
         self.width = 530
         self.height = 260
@@ -1115,7 +1092,7 @@ class DentistView(tk.Toplevel):
         self.image_frame.place(rely=0.06, relx=0.0480)
         # self.logout_button = tk.Button(self.optionFrame1, text=" ", width=44, height=10, font=("Arial", 9, "bold"))
         # self.logout_button.place(x=18, y=15)
-        self.logout_button = tk.Button(self.optionFrame1, text="Behandlungszeit\nändern", width=20, height=2, font=("Arial", 9, "bold"), background='#5B949A', foreground='white', command=self.set_behandlungzeit)
+        self.logout_button = tk.Button(self.optionFrame1, text="Patientlist", width=20, height=2, font=("Arial", 9, "bold"), background='#5B949A', foreground='white', command=self.set_behandlungzeit)
         self.logout_button.place(x=18, y=200)
         self.logout_button = tk.Button(self.optionFrame1, text="Krankenkasse\nändern", width=20, height=2, font=("Arial", 9, "bold"), background='#5B949A', foreground='white', command=self.set_krankenkasse)
         self.logout_button.place(x=187, y=200)
@@ -1159,15 +1136,15 @@ class DentistView(tk.Toplevel):
         self.optionFrame3.place(x=7.5, y=278)
 
         self.count_patient()
-        self.warteZeit_Label = tk.Label(self.optionFrame3, text="Terminanzahl: ", width=22, height=5, fg="black", font=("Arial", 11, "bold"))
-        self.warteZeit_Label.place(x=15, y=12)
-        self.TerminAnzahl_Label = tk.Label(self.optionFrame3, text="Patientanzahl: " + str(self.patientanzahl), width=28, height=5, fg="black", font=("Arial", 11, "bold"))
-        self.TerminAnzahl_Label.place(x=218, y=12)
-        anzahlPatien_button = tk.Button(self.optionFrame3, text="Patientlist", width=22, height=3, fg="white", background='#5B949A', font=("Arial", 11, "bold"))
+        self.warteZeit_Label = tk.Label(self.optionFrame3, text="Terminanzahl: ", width=25, height=5, fg="black", font=("Arial", 11, "bold"))
+        self.warteZeit_Label.place(x=6, y=12)
+        self.TerminAnzahl_Label = tk.Label(self.optionFrame3, text="Patientanzahl: " + str(self.patientanzahl), width=32, height=5, fg="black", font=("Arial", 11, "bold"))
+        self.TerminAnzahl_Label.place(x=226, y=12)
+        anzahlPatien_button = tk.Button(self.optionFrame3, text="Behandlungszeit\nändern", width=22, height=3, fg="white", command=self.set_behandlungzeit, background='#5B949A', font=("Arial", 11, "bold"))
         anzahlPatien_button.place(x=530, y=12)
         Termin_Hinzuf_button = tk.Button(self.optionFrame3, text="Termin Hinzufügen", width=22, height=3, fg="white", background='#5B949A', font=("Arial", 11, "bold"))
         Termin_Hinzuf_button.place(x=530, y= 90)
-        Termin_Hinzuf_button = tk.Button(self.optionFrame3, text="Patient Hinzufügen", width=22, height=3, fg="white", background='#5B949A', font=("Arial", 11, "bold"))
+        Termin_Hinzuf_button = tk.Button(self.optionFrame3, text="Patient Hinzufügen", width=22, height=3, fg="white", background='#5B949A', font=("Arial", 11, "bold"), command=self.patient_hinzufüg_window)
         Termin_Hinzuf_button.place(x=530, y= 170)
 
     # Funktion zum Aktualisieren des Bildes
@@ -1219,6 +1196,10 @@ class DentistView(tk.Toplevel):
         change_password_window = ChangePasswordDenWindow(self.master, self.last_names2)
         change_password_window.title("Passwort ändern")
 
+    def patient_hinzufüg_window(self):
+        patientHinzuDenWindow = PatientHinzuDenWindow(self.master)
+        patientHinzuDenWindow.title("Patient hinzufügen")
+
     def set_hintergrund(self):
         farbe = colorchooser.askcolor(title="Farbe auswählen")[1]
         self.config(bg=farbe)
@@ -1230,7 +1211,47 @@ class DentistView(tk.Toplevel):
         print("krankenkasse ist noch nicht fertig")
     
     def set_behandlungzeit(self):
-        print("zeit ist noch nicht fertig")
+        new_window1 = tk.Toplevel()
+        new_window1.title("Behandlungszeit Ändern")
+        new_window1.geometry("400x300")
+        new_window1.config(background="#3B6064")
+
+        titel_label = tk.Label(new_window1, text='Bitte geben sie Behandlungszeit ein!!', font=("Arial", 15, "bold"), background="#3B6064", fg='white')
+        titel_label.pack(pady=20)
+
+        Label1 = tk.Label(new_window1, text= 'Morgen (Mo-Fr: 00-00)', font=("Arial", 10), background="#3B6064", fg='white')
+        Label1.place(x=30, y=80)
+        self.Entry1 = tk.Entry(new_window1, width=15, font=("Arial", 15))
+        self.Entry1.place(x=195, y=80)
+
+        Label2 = tk.Label(new_window1, text= 'Nachmittag (Mo-Fr: 00-00)', font=("Arial", 10), background="#3B6064", fg='white')
+        Label2.place(x=30, y=130)
+        self.Entry2 = tk.Entry(new_window1, width=15, font=("Arial", 15))
+        self.Entry2.place(x=195, y=130)
+
+        submit = tk.Button(new_window1, text='Änderung speichern', command=self.submit, width=17, height=2)
+        submit.place(x=220, y=180)
+
+    def submit(self):
+        montag = self.Entry1.get()
+        nachmittag = self.Entry2.get()
+        name = self.last_names2
+
+        wb = openpyxl.load_workbook("Database/Patienten_Zahnärzte_Kosten.xlsx")
+        sheet = wb['Zahnärzte']
+
+        for row in range(1, sheet.max_row + 1):
+            if sheet.cell(row=row, column=1).value == name:
+                print(name)
+                # wenn der Name gefunden ist, 'Behandlungszeiten' aktualisieren
+                sheet.cell(row=row, column=4).value = f'Mo-Fr: {montag} Uhr und {nachmittag} Uhr'
+                break  # raus wenn den Name gefunden ist
+
+        wb.save("Database/Patienten_Zahnärzte_Kosten.xlsx")
+
+        self.Entry1.delete(0, tk.END)
+        self.Entry2.delete(0, tk.END)
+        messagebox.showinfo("Erfolg", 'Änderungen wurden despeichert')
 
 class ChangePassworWindow(tk.Toplevel):
     def __init__(self, parent, current_user):#
@@ -1391,6 +1412,105 @@ class ChangePasswordDenWindow(tk.Toplevel):
         except Exception as e:
             # messagebox.showerror("Error", f"Une erreur s'est produite : {str(e)}")
             print({str(e)})
+
+class PatientHinzuDenWindow(tk.Toplevel):
+    def __init__(self, parent):
+        super().__init__()#
+        self.parent = parent #
+        self.geometry("500x400")
+        self.config(background="#3B6064")
+        self.resizable(False, False)
+
+        self.problematik_var = tk.StringVar()
+        self.titel_var = tk.StringVar()
+
+        self.frame = tk.Frame(self, background='#5B949A')
+        self.frame.pack(padx=20, pady=20, fill='both', expand=True)
+
+        # Beschriftungen und Eingabefelder für die Patienteninformationen
+        left_frame = tk.Frame(self.frame, background='#5B949A')
+        left_frame.pack(side='left', padx=10)
+
+        tk.Label(left_frame, text="Titel", background='#5B949A').pack(anchor='w')
+        titel = ["Frau", "Herr"]
+        self.combobox4 = Combobox(left_frame, textvariable=self.titel_var, values=titel, width=22)
+        self.titel_var.set(titel[0])  # Set the default selection
+        self.combobox4.pack(anchor='w') 
+
+        tk.Label(left_frame, text="Name des Patienten:", background='#5B949A').pack(anchor='w')
+        self.nom_patient_entry = tk.Entry(left_frame, width=25)
+        self.nom_patient_entry.pack(anchor='w')
+
+        tk.Label(left_frame, text="ID/Passwort:", background='#5B949A').pack(anchor='w')
+        self.id_passwort_entry = tk.Entry(left_frame, width=25)
+        self.id_passwort_entry.pack(anchor='w')
+
+
+        tk.Label(left_frame, text="Krankenkassenart:", background='#5B949A').pack(anchor='w')
+        krankenkassenarten = ["gesetzlich", "freiwillig gesetzlich", "privat"]
+        self.krankenk_var = tk.StringVar(self)
+        self.combobox2 = Combobox(left_frame, values=krankenkassenarten, textvariable=self.krankenk_var, width=22)  # Bind the selection event
+        self.combobox2.current(0)  # Set the default selection
+        self.combobox2.pack(anchor='w')
+
+        tk.Label(left_frame, text="Zahnproblem:", background='#5B949A').pack(anchor='w')
+        Problem_options = ["Karies klein", "Karies groß", "Teilkrone", "krone", "Wurzelbehandlung"]
+        self.combobox1 = Combobox(left_frame, textvariable=self.problematik_var, values=Problem_options, width=22)
+        self.problematik_var.set(Problem_options[0])  # Set the default selection
+        self.combobox1.pack(anchor='w') 
+
+        tk.Label(left_frame, text="behandelnden Zahnazahl:", background='#5B949A').pack(anchor='w')
+        self.anzahl_zaehne_entry = tk.Entry(left_frame, width=25)
+        self.anzahl_zaehne_entry.pack(anchor='w')
+
+        tk.Button(left_frame, text='Patient hinzufügen', command=self.patient_hinzufügen).pack(anchor='w', padx= 18, pady=20)
+
+        # Bildgröße anpassen
+        image_path = "Bilder/img5.jpg"  # Stellen Sie sicher, dass der Pfad korrekt ist
+        original_image = Image.open(image_path)
+        resized_image = original_image.resize((330, 330), Image.ADAPTIVE)  # Auf die gewünschte Größe ändern
+        img = ImageTk.PhotoImage(resized_image)
+
+        label_image = tk.Label(self.frame, image=img)
+        label_image.image = img  # Referenz zum Bild behalten
+        # label_image.pack(side='right', padx=0)
+        label_image.pack(padx=40, pady=45)
+
+    def patient_hinzufügen(self):
+        # Eingegebene Informationen abrufen
+        titel = self.titel_var.get()
+        name_patient = self.nom_patient_entry.get()
+        id_passwort = self.id_passwort_entry.get()
+        krankenkassenart = self.krankenk_var.get()
+        dentale_problematik = self.problematik_var.get()
+        anzahl_zaehne = self.anzahl_zaehne_entry.get()
+
+        wb = openpyxl.load_workbook('Database/Patienten_Zahnärzte_Kosten.xlsx')
+
+        # Wählen Sie das gewünschte Tabellenblatt
+        sheet = wb['Stamm-Patienten2']
+
+        # Wählen Sie die Zelle und füllen Sie sie mit Daten
+        next_row = sheet.max_row + 1  # Bestimmen der nächsten freien Zeile
+        if titel == "Herr":
+            sheet.cell(row=next_row, column=1).value = "Herr " + name_patient
+        else:
+            sheet.cell(row=next_row, column=1).value = "Frau " + name_patient
+        sheet.cell(row=next_row, column=2).value = id_passwort
+        sheet.cell(row=next_row, column=3).value = krankenkassenart
+        sheet.cell(row=next_row, column=4).value = dentale_problematik
+        sheet.cell(row=next_row, column=5).value = anzahl_zaehne
+
+        wb.save('Database/Patienten_Zahnärzte_Kosten.xlsx')  # Speichern Sie die Änderungen im Workbook
+
+        # Nach dem Speichern die Felder leeren
+        self.nom_patient_entry.delete(0, tk.END)
+        self.id_passwort_entry.delete(0, tk.END)
+        self.anzahl_zaehne_entry.delete(0, tk.END)
+
+        # Anzeige einer Bestätigungsmeldung
+        messagebox.showinfo("Erfolgreich gespeichert", "Daten erfolgreich gespeichert!")
+
 
 
 # Hauptprogramm
